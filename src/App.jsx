@@ -7,7 +7,8 @@ import { necromancyEngine, SPIRITS } from './engine/necromancyEngine';
 import { gemmaEngine } from './engine/gemmaEngine';
 import { seanceAudio } from './audio/seanceAudio';
 
-const STORAGE_KEY = 'seance_sessions_v4';
+const STORAGE_KEY = 'seance_sessions_v5';
+const PINNED_KEY = 'seance_pinned_v1';
 
 export default function App() {
   // --- Persistent Sessions & Settings ---
@@ -23,16 +24,16 @@ export default function App() {
       title: 'Invocation of the IBM System/360',
       spiritId: 'pli',
       timestamp: new Date().toISOString(),
-      messages: [{
-        id: 'msg-init',
-        sender: 'spirit',
-        spiritId: 'pli',
-        diagnosticCode: 'IBM0769I: SOUL CHANNEL ESTABLISHED ON UNIT SYSLST',
-        punchcardLine: '000010 /* CHANNELING PL/I: THE MONOLITHIC LEVIATHAN */              PLI00001',
-        text: SPIRITS.pli.introGreeting,
-        timestamp: new Date().toISOString()
-      }]
+      messages: [] // Empty state so "What shall we summon?" is shown!
     }];
+  });
+
+  const [pinnedSessionIds, setPinnedSessionIds] = useState(() => {
+    try {
+      const saved = localStorage.getItem(PINNED_KEY);
+      if (saved) return JSON.parse(saved);
+    } catch (e) {}
+    return [];
   });
 
   const [activeSessionId, setActiveSessionId] = useState(() => {
@@ -52,6 +53,9 @@ export default function App() {
     progress: 0,
     statusText: ''
   });
+
+  // "Think" Mode (toggles deeper / deliberate manifestation mode)
+  const [isThinkActive, setIsThinkActive] = useState(false);
 
   // Ambiance and Chamber Settings
   const [isAudioPlaying, setIsAudioPlaying] = useState(false);
@@ -80,12 +84,18 @@ export default function App() {
     return unsubscribe;
   }, []);
 
-  // Save sessions to localStorage
+  // Save sessions & pinned to localStorage
   useEffect(() => {
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(sessions));
     } catch (e) {}
   }, [sessions]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(PINNED_KEY, JSON.stringify(pinnedSessionIds));
+    } catch (e) {}
+  }, [pinnedSessionIds]);
 
   // Sync active spirit to engine
   useEffect(() => {
@@ -103,6 +113,14 @@ export default function App() {
   const handleToggleAudio = () => {
     const newState = seanceAudio.toggleAmbiance();
     setIsAudioPlaying(newState);
+  };
+
+  const handleTogglePin = (sessionId) => {
+    setPinnedSessionIds(prev => 
+      prev.includes(sessionId) 
+        ? prev.filter(id => id !== sessionId) 
+        : [...prev, sessionId]
+    );
   };
 
   const handleSelectSpirit = (newSpiritId) => {
@@ -141,15 +159,7 @@ export default function App() {
       title: `Séance of ${spirit.name}`,
       spiritId: activeSpiritId,
       timestamp: new Date().toISOString(),
-      messages: [{
-        id: 'msg-' + Date.now(),
-        sender: 'spirit',
-        spiritId: activeSpiritId,
-        diagnosticCode: `${spirit.compilerPrefix}001I: SPIRIT MANIFESTATION INITIATED`,
-        punchcardLine: `000010 /* COMMENCING INVOCATION OF ${spirit.name} */               SEC00010`,
-        text: spirit.introGreeting,
-        timestamp: new Date().toISOString()
-      }]
+      messages: [] // Empty state so "What shall we summon?" displays!
     };
 
     setSessions(prev => [newSession, ...prev]);
@@ -330,7 +340,8 @@ export default function App() {
 
     // Break text into words/tokens
     const tokens = spiritMessage.text.match(/\S+\s*/g) || [spiritMessage.text];
-    const tokenInterval = manifestSpeed === 'whisper' ? 45 : 28;
+    const baseInterval = manifestSpeed === 'whisper' ? 45 : 28;
+    const tokenInterval = isThinkActive ? baseInterval * 1.5 : baseInterval;
 
     // Show typing indicator for ~350ms before first token arrives
     initialTypingDelayRef.current = setTimeout(() => {
@@ -373,7 +384,6 @@ export default function App() {
     if (isStreaming) return;
     const currentMsgs = activeSession.messages;
 
-    // Find the prompt before this response
     let userPrompt = '';
     for (let i = msgIndex - 1; i >= 0; i--) {
       if (currentMsgs[i].sender === 'user') {
@@ -384,7 +394,6 @@ export default function App() {
 
     if (!userPrompt) return;
 
-    // Truncate messages to before this response
     const truncated = currentMsgs.slice(0, msgIndex);
     setSessions(prev => prev.map(s => {
       if (s.id === activeSessionId) {
@@ -430,8 +439,8 @@ export default function App() {
   };
 
   return (
-    <div className="flex h-screen w-screen overflow-hidden bg-[#212121] text-[#ECECEC]">
-      {/* Left ChatGPT-style Sidebar */}
+    <div className="flex h-screen w-screen overflow-hidden bg-[#000000] text-[#ECECEC]">
+      {/* Sidebar matching ChatGPT's dark UI layout exactly */}
       <Sidebar
         sessions={sessions}
         activeSessionId={activeSessionId}
@@ -442,6 +451,8 @@ export default function App() {
         }}
         onNewSession={handleNewSession}
         onDeleteSession={handleDeleteSession}
+        pinnedSessionIds={pinnedSessionIds}
+        onTogglePin={handleTogglePin}
         activeSpiritId={activeSpiritId}
         onSelectSpirit={handleSelectSpirit}
         isAudioPlaying={isAudioPlaying}
@@ -458,9 +469,10 @@ export default function App() {
         onOpenCodex={() => setIsCodexOpen(true)}
         isOpen={isMobileMenuOpen}
         onCloseMobile={() => setIsMobileMenuOpen(false)}
+        onToggleSidebar={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
       />
 
-      {/* Main ChatGPT-style Séance Chamber */}
+      {/* Main Séance Chamber */}
       <ChatArea
         session={activeSession}
         activeSpiritId={activeSpiritId}
@@ -469,6 +481,7 @@ export default function App() {
         onSelectEngineType={handleSelectEngineType}
         gemmaStatus={gemmaStatus}
         onSendMessage={handleSendMessage}
+        onNewSession={handleNewSession}
         onRegenerate={handleRegenerate}
         isStreaming={isStreaming}
         streamingText={streamingText}
@@ -481,6 +494,8 @@ export default function App() {
         onOpenMobileMenu={() => setIsMobileMenuOpen(true)}
         isAudioPlaying={isAudioPlaying}
         onToggleAudio={handleToggleAudio}
+        isThinkActive={isThinkActive}
+        onToggleThink={() => setIsThinkActive(!isThinkActive)}
       />
 
       {/* Interactive Punchcard Modal */}

@@ -30,7 +30,7 @@ function CodeBlock({ language, code, onOpenPunchcard }) {
   const firstLine = code.split('\n')[0] || '';
 
   return (
-    <div className="my-4 rounded-[12px] overflow-hidden border border-white/10 bg-[#0d0d0d] shadow-lg">
+    <div className="my-4 rounded-[12px] overflow-hidden border border-white/10 bg-[#0d0d0d] shadow-xs">
       {/* Header bar */}
       <div className="flex items-center justify-between px-4 py-2 bg-[#1e1e1e] border-b border-white/5 text-neutral-400 font-mono-code text-xs">
         <span className="uppercase tracking-wider font-semibold text-neutral-300">
@@ -40,7 +40,7 @@ function CodeBlock({ language, code, onOpenPunchcard }) {
           {onOpenPunchcard && (
             <button
               onClick={() => onOpenPunchcard(firstLine || code.slice(0, 72))}
-              className="flex items-center gap-1.5 px-2.5 py-1 rounded bg-[#2a2a2a] hover:bg-[#333333] text-amber-300 text-xs font-mono-code transition-colors cursor-pointer"
+              className="flex items-center gap-1.5 px-2.5 py-1 rounded-[8px] bg-[#2a2a2a] hover:bg-[#333333] text-amber-300 text-xs font-mono-code transition-colors cursor-pointer"
               title="View as 80-Column IBM Punchcard"
             >
               <FileText className="w-3.5 h-3.5" />
@@ -49,7 +49,7 @@ function CodeBlock({ language, code, onOpenPunchcard }) {
           )}
           <button
             onClick={handleCopy}
-            className="flex items-center gap-1.5 px-2.5 py-1 rounded bg-[#2a2a2a] hover:bg-[#333333] text-neutral-300 hover:text-white text-xs font-sans transition-colors cursor-pointer"
+            className="flex items-center gap-1.5 px-2.5 py-1 rounded-[8px] bg-[#2a2a2a] hover:bg-[#333333] text-neutral-300 hover:text-white text-xs font-sans transition-colors cursor-pointer"
           >
             {copied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
             <span>{copied ? 'Copied' : 'Copy'}</span>
@@ -128,34 +128,34 @@ export default function MessageBubble({
     };
   }, [message.text]);
 
-  // User Message: Right-aligned bubble, #2F2F2F, radius 18px, padding 10px 16px, max-width 70%
+  // User Message: Right-aligned bubble, bg #2f2f2f, radius 20px, padding 10px 16px, max-width 70%
   if (isUser) {
     return (
-      <div className="flex justify-end animate-fade-in">
-        <div className="max-w-[70%] bg-[#2F2F2F] text-[#ECECEC] rounded-[18px] py-[10px] px-[16px] text-[16px] leading-[1.7] tracking-[-0.01em] shadow-xs">
+      <div className="flex justify-end animate-fade-in w-full">
+        <div className="max-w-[70%] bg-[#2f2f2f] text-[#ECECEC] rounded-[20px] py-[10px] px-[16px] text-[16px] leading-[1.75] tracking-[-0.01em] shadow-xs">
           <p className="whitespace-pre-wrap">{message.text}</p>
         </div>
       </div>
     );
   }
 
-  // Assistant Message: No bubble, full column width, avatar on left, subtle badge, action row on hover
+  // Assistant Message: No bubble, plain text, full column width, avatar on left, line-height 1.75, 16px
   return (
     <div className="flex items-start gap-3.5 group animate-fade-in w-full">
       {/* Avatar */}
       <div className="shrink-0 mt-0.5">
         <div 
-          className="w-7 h-7 rounded-full bg-[#2a2a2a] border flex items-center justify-center font-bold text-xs shadow-xs"
-          style={{ borderColor: spirit.accentColor, color: spirit.accentColor }}
+          className="w-7 h-7 rounded-full bg-[#212121] border border-[#2a2a2a] flex items-center justify-center font-bold text-xs shadow-xs"
+          style={{ color: spirit.accentColor }}
         >
           {spirit.sigil}
         </div>
       </div>
 
-      {/* Main Content Area */}
-      <div className="flex-1 min-w-0 space-y-2">
-        {/* Subtle name and era badge */}
-        <div className="flex items-center gap-2 text-neutral-400 text-xs">
+      {/* Main Content Column */}
+      <div className="flex-1 min-w-0 space-y-1.5">
+        {/* Subtle name and era */}
+        <div className="flex items-center gap-2 text-[#9b9b9b] text-xs">
           <span className="font-semibold text-neutral-300">
             {spirit.name}
           </span>
@@ -163,7 +163,7 @@ export default function MessageBubble({
             {spirit.era}
           </span>
           {message.diagnosticCode && (
-            <span className="text-[10px] font-mono-code text-emerald-400/90 bg-emerald-950/40 px-1.5 py-0.5 rounded border border-emerald-500/20">
+            <span className="text-[10px] font-mono-code text-emerald-400/90 bg-[#171717] px-1.5 py-0.5 rounded border border-[#2a2a2a]">
               {message.diagnosticCode}
             </span>
           )}
@@ -172,13 +172,13 @@ export default function MessageBubble({
         {/* Typing indicator: three pulsing dots before first token arrives */}
         {isStreaming && !message.text ? (
           <div className="flex items-center gap-1.5 py-2">
-            <span className="w-2 h-2 rounded-full bg-neutral-400 typing-dot"></span>
-            <span className="w-2 h-2 rounded-full bg-neutral-400 typing-dot"></span>
-            <span className="w-2 h-2 rounded-full bg-neutral-400 typing-dot"></span>
+            <span className="w-2 h-2 rounded-full bg-[#9b9b9b] typing-dot"></span>
+            <span className="w-2 h-2 rounded-full bg-[#9b9b9b] typing-dot"></span>
+            <span className="w-2 h-2 rounded-full bg-[#9b9b9b] typing-dot"></span>
           </div>
         ) : (
-          <div className="text-[16px] leading-[1.7] tracking-[-0.01em] text-[#ECECEC] font-sans">
-            {/* Italic amber stage direction at start of message */}
+          <div className="text-[16px] leading-[1.75] tracking-[-0.01em] text-[#ECECEC] font-sans">
+            {/* Italic amber stage direction strictly at start of message */}
             {stageDirection && (
               <div className="italic text-amber-300/90 text-[15px] leading-relaxed mb-3 font-normal">
                 *{stageDirection}*
@@ -205,30 +205,30 @@ export default function MessageBubble({
                   </h3>
                 ),
                 p: ({ children }) => (
-                  <p className="mb-3.5 last:mb-0 leading-[1.7] text-[16px] text-[#ECECEC]">
+                  <p className="mb-3.5 last:mb-0 leading-[1.75] text-[16px] text-[#ECECEC]">
                     {children}
                   </p>
                 ),
                 ul: ({ children }) => (
-                  <ul className="pl-[1.5rem] my-3 list-disc space-y-[0.4rem] text-[#ECECEC] leading-[1.7]">
+                  <ul className="pl-[1.5rem] my-3 list-disc space-y-[0.4rem] text-[#ECECEC] leading-[1.75]">
                     {children}
                   </ul>
                 ),
                 ol: ({ children }) => (
-                  <ol className="pl-[1.5rem] my-3 list-decimal space-y-[0.4rem] text-[#ECECEC] leading-[1.7]">
+                  <ol className="pl-[1.5rem] my-3 list-decimal space-y-[0.4rem] text-[#ECECEC] leading-[1.75]">
                     {children}
                   </ol>
                 ),
                 li: ({ children }) => (
-                  <li className="leading-[1.7]">{children}</li>
+                  <li className="leading-[1.75]">{children}</li>
                 ),
                 blockquote: ({ children }) => (
-                  <blockquote className="border-l-2 border-amber-400 pl-4 py-1 italic text-neutral-300 my-3 leading-[1.7]">
+                  <blockquote className="border-l-2 border-amber-400 pl-4 py-1 italic text-neutral-300 my-3 leading-[1.75]">
                     {children}
                   </blockquote>
                 ),
                 table: ({ children }) => (
-                  <div className="overflow-x-auto my-4 border border-white/10 rounded-lg">
+                  <div className="overflow-x-auto my-4 border border-white/10 rounded-[12px]">
                     <table className="w-full text-left text-sm text-[#ECECEC] border-collapse">
                       {children}
                     </table>
@@ -245,7 +245,7 @@ export default function MessageBubble({
                   </tbody>
                 ),
                 tr: ({ children }) => (
-                  <tr className="even:bg-white/[0.03] hover:bg-white/[0.05] transition-colors">
+                  <tr className="even:bg-white/[0.02] hover:bg-white/[0.04] transition-colors">
                     {children}
                   </tr>
                 ),
@@ -290,8 +290,8 @@ export default function MessageBubble({
           </div>
         )}
 
-        {/* Action row under assistant message - Visible on hover only */}
-        <div className="opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-between pt-1 text-neutral-400 text-xs">
+        {/* Action row under each assistant reply: copy, regenerate, speak - visible on hover only */}
+        <div className="opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-between pt-1 text-[#9b9b9b] text-xs">
           {/* Card footer (kept monospace) */}
           <div>
             {message.punchcardLine && (
@@ -306,11 +306,11 @@ export default function MessageBubble({
             )}
           </div>
 
-          {/* Action buttons (Copy, Regenerate, Speak) */}
+          {/* Action buttons: copy, regenerate, speak */}
           <div className="flex items-center gap-1">
             <button
               onClick={handleCopyMessage}
-              className="p-1.5 rounded-lg hover:bg-[#2a2a2a] hover:text-white transition-colors cursor-pointer"
+              className="p-1.5 rounded-[8px] hover:bg-[#212121] hover:text-white transition-colors cursor-pointer"
               title="Copy message"
             >
               {copiedText ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
@@ -319,7 +319,7 @@ export default function MessageBubble({
             {onRegenerate && (
               <button
                 onClick={onRegenerate}
-                className="p-1.5 rounded-lg hover:bg-[#2a2a2a] hover:text-white transition-colors cursor-pointer"
+                className="p-1.5 rounded-[8px] hover:bg-[#212121] hover:text-white transition-colors cursor-pointer"
                 title="Regenerate response"
               >
                 <RotateCw className="w-3.5 h-3.5" />
@@ -328,7 +328,7 @@ export default function MessageBubble({
 
             <button
               onClick={handleSpeak}
-              className={`p-1.5 rounded-lg hover:bg-[#2a2a2a] transition-colors cursor-pointer ${
+              className={`p-1.5 rounded-[8px] hover:bg-[#212121] transition-colors cursor-pointer ${
                 isSpeaking ? 'text-amber-400' : 'hover:text-white'
               }`}
               title={isSpeaking ? 'Stop voice' : 'Read aloud'}

@@ -1,10 +1,10 @@
 import React, { useRef, useEffect, useState } from 'react';
 import { 
-  Menu, Trash2, Download, BookOpen, Volume2, 
-  VolumeX, Sparkles, ChevronDown, Check, Cpu 
+  Menu, SquarePen, MoreHorizontal, ChevronDown, Check, 
+  Download, Trash2, Volume2, VolumeX, FileText, Cpu, BookOpen
 } from 'lucide-react';
 import MessageBubble from './MessageBubble';
-import InputBar from './InputBar';
+import InputBar, { DEFAULT_SUGGESTIONS } from './InputBar';
 import { SPIRITS } from '../engine/necromancyEngine';
 
 export default function ChatArea({
@@ -15,6 +15,7 @@ export default function ChatArea({
   onSelectEngineType,
   gemmaStatus,
   onSendMessage,
+  onNewSession,
   onRegenerate,
   isStreaming,
   streamingText,
@@ -26,13 +27,19 @@ export default function ChatArea({
   onOpenCodex,
   onOpenMobileMenu,
   isAudioPlaying,
-  onToggleAudio
+  onToggleAudio,
+  isThinkActive,
+  onToggleThink
 }) {
   const messagesEndRef = useRef(null);
   const containerRef = useRef(null);
   const isNearBottomRef = useRef(true);
   const [isModelDropdownOpen, setIsModelDropdownOpen] = useState(false);
+  const [isMoreMenuOpen, setIsMoreMenuOpen] = useState(false);
+
   const spirit = SPIRITS[activeSpiritId] || SPIRITS.pli;
+  const messages = session?.messages || [];
+  const hasMessages = messages.length > 0 || isStreaming;
 
   // Track if user is near bottom before triggering auto-scroll
   const handleScroll = () => {
@@ -47,47 +54,45 @@ export default function ChatArea({
     if (isNearBottomRef.current && messagesEndRef.current) {
       messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
     }
-  }, [session?.messages, streamingText, isStreaming]);
-
-  const messages = session?.messages || [];
+  }, [messages, streamingText, isStreaming]);
 
   return (
-    <main className="flex-1 flex flex-col h-screen bg-[#212121] overflow-hidden relative text-[#ECECEC]">
-      {/* Top Header Bar */}
-      <header className="h-14 px-4 bg-[#212121]/95 backdrop-blur-md border-b border-[#2b2b2b] flex items-center justify-between shrink-0 z-20">
-        {/* Left: Mobile Toggle & ChatGPT-style Model Selector Dropdown */}
-        <div className="flex items-center gap-2">
+    <main className="flex-1 flex flex-col h-screen bg-[#000000] overflow-hidden relative text-[#ECECEC]">
+      {/* TOP BAR: persona name + model dropdown on left, single new séance button & "..." menu on right. NO visible border under bar */}
+      <header className="h-14 px-4 bg-transparent flex items-center justify-between shrink-0 z-20">
+        {/* Left: Mobile Drawer Trigger & Model / Persona Dropdown (ChatGPT style) */}
+        <div className="flex items-center gap-1.5">
           <button
             onClick={onOpenMobileMenu}
-            className="md:hidden p-2 rounded-lg hover:bg-[#2f2f2f] text-neutral-300 hover:text-white cursor-pointer"
+            className="md:hidden p-2 rounded-[12px] hover:bg-[#212121] text-[#9b9b9b] hover:text-white cursor-pointer"
+            title="Open sidebar"
           >
             <Menu className="w-5 h-5" />
           </button>
 
-          {/* Model / Spirit Selector Pill */}
+          {/* Model picker dropdown: "PL/I (Instant) ▾" */}
           <div className="relative">
             <button
               onClick={() => setIsModelDropdownOpen(!isModelDropdownOpen)}
-              className="flex items-center gap-2 px-3 py-1.5 rounded-xl hover:bg-[#2f2f2f] text-white text-[15px] font-semibold transition-colors cursor-pointer"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-[12px] hover:bg-[#212121] text-white text-[18px] font-semibold transition-colors cursor-pointer select-none"
             >
-              <span className="text-lg animate-candle-flame inline-block">🕯️</span>
               <span>{spirit.name}</span>
-              <span className="text-xs text-neutral-400 font-normal">
+              <span className="text-[13px] text-[#9b9b9b] font-normal">
                 ({activeEngineType === 'gemma' ? 'Gemma 2B' : 'Instant'})
               </span>
-              <ChevronDown className="w-4 h-4 text-neutral-400" />
+              <ChevronDown className="w-4 h-4 text-[#9b9b9b]" />
             </button>
 
-            {/* Model Selector Dropdown Menu */}
+            {/* Dropdown Menu */}
             {isModelDropdownOpen && (
               <>
                 <div 
                   className="fixed inset-0 z-30" 
                   onClick={() => setIsModelDropdownOpen(false)} 
                 />
-                <div className="absolute left-0 top-full mt-1.5 w-72 bg-[#282828] border border-white/10 rounded-2xl shadow-2xl p-2 z-40 space-y-1 animate-fade-in text-sm">
-                  <div className="px-2 py-1 text-[11px] font-medium text-neutral-400 uppercase tracking-wider">
-                    Select Intelligence Engine
+                <div className="absolute left-0 top-full mt-1.5 w-72 bg-[#212121] border border-[#2a2a2a] rounded-[16px] shadow-2xl p-2 z-40 space-y-1 animate-fade-in text-sm text-[#ECECEC]">
+                  <div className="px-2 py-1 text-[11px] font-medium text-[#9b9b9b] uppercase tracking-wider">
+                    Intelligence Core
                   </div>
                   
                   {/* Engine Options */}
@@ -97,37 +102,37 @@ export default function ChatArea({
                         onSelectEngineType('instant');
                         setIsModelDropdownOpen(false);
                       }}
-                      className={`p-2 rounded-xl text-left transition-all cursor-pointer ${
+                      className={`p-2 rounded-[10px] text-left transition-all cursor-pointer ${
                         activeEngineType === 'instant'
-                          ? 'bg-amber-500/20 text-amber-200 border border-amber-500/40'
-                          : 'hover:bg-[#333333] text-neutral-300'
+                          ? 'bg-[#2f2f2f] text-white font-medium'
+                          : 'hover:bg-[#282828] text-[#9b9b9b]'
                       }`}
                     >
-                      <div className="font-semibold text-xs">⚡ Instant PL/I</div>
-                      <div className="text-[10px] text-neutral-400">0ms local engine</div>
+                      <div className="font-medium text-xs">⚡ Instant PL/I</div>
+                      <div className="text-[10px] text-[#9b9b9b]">0ms local engine</div>
                     </button>
                     <button
                       onClick={() => {
                         onSelectEngineType('gemma');
                         setIsModelDropdownOpen(false);
                       }}
-                      className={`p-2 rounded-xl text-left transition-all cursor-pointer ${
+                      className={`p-2 rounded-[10px] text-left transition-all cursor-pointer ${
                         activeEngineType === 'gemma'
-                          ? 'bg-amber-500/20 text-amber-200 border border-amber-500/40'
-                          : 'hover:bg-[#333333] text-neutral-300'
+                          ? 'bg-[#2f2f2f] text-white font-medium'
+                          : 'hover:bg-[#282828] text-[#9b9b9b]'
                       }`}
                     >
-                      <div className="font-semibold text-xs">🧠 Gemma 2B</div>
-                      <div className="text-[10px] text-neutral-400">WebGPU Neural AI</div>
+                      <div className="font-medium text-xs">🧠 Gemma 2B</div>
+                      <div className="text-[10px] text-[#9b9b9b]">WebGPU Neural AI</div>
                     </button>
                   </div>
 
-                  <div className="border-t border-white/5 my-1"></div>
-                  <div className="px-2 py-1 text-[11px] font-medium text-neutral-400 uppercase tracking-wider">
+                  <div className="border-t border-[#2a2a2a] my-1"></div>
+                  <div className="px-2 py-1 text-[11px] font-medium text-[#9b9b9b] uppercase tracking-wider">
                     Select Spirit Entity
                   </div>
 
-                  {/* Spirit Options */}
+                  {/* Spirits list */}
                   {Object.values(SPIRITS).map(s => (
                     <button
                       key={s.id}
@@ -135,18 +140,18 @@ export default function ChatArea({
                         onSelectSpirit(s.id);
                         setIsModelDropdownOpen(false);
                       }}
-                      className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-left transition-colors cursor-pointer ${
-                        activeSpiritId === s.id ? 'bg-[#383838] text-white font-medium' : 'hover:bg-[#333333] text-neutral-300'
+                      className={`w-full flex items-center justify-between px-3 py-2 rounded-[10px] text-left transition-colors cursor-pointer ${
+                        activeSpiritId === s.id ? 'bg-[#2f2f2f] text-white font-medium' : 'hover:bg-[#282828] text-[#9b9b9b]'
                       }`}
                     >
                       <div className="flex items-center gap-2">
-                        <span className="text-base">{s.sigil}</span>
+                        <span>{s.sigil}</span>
                         <div>
-                          <div className="text-[13px] font-medium leading-tight">{s.name}</div>
-                          <div className="text-[11px] text-neutral-400">{s.era}</div>
+                          <div className="text-[13px] font-medium leading-tight text-[#ECECEC]">{s.name}</div>
+                          <div className="text-[11px] text-[#9b9b9b]">{s.era}</div>
                         </div>
                       </div>
-                      {activeSpiritId === s.id && <Check className="w-4 h-4 text-amber-400" />}
+                      {activeSpiritId === s.id && <Check className="w-4 h-4 text-white" />}
                     </button>
                   ))}
                 </div>
@@ -155,139 +160,150 @@ export default function ChatArea({
           </div>
         </div>
 
-        {/* Right: Quick Action Controls */}
+        {/* Right: Single icon button for new séance & "..." menu */}
         <div className="flex items-center gap-1">
-          {/* Audio Toggle */}
+          {/* Single new séance icon button */}
           <button
-            onClick={onToggleAudio}
-            title={isAudioPlaying ? 'Mute Séance Tone' : 'Play Room Tone'}
-            className={`p-2 rounded-lg transition-colors cursor-pointer ${
-              isAudioPlaying
-                ? 'bg-emerald-500/20 text-emerald-300'
-                : 'hover:bg-[#2f2f2f] text-neutral-400 hover:text-white'
-            }`}
+            onClick={onNewSession}
+            title="New séance"
+            className="p-2 rounded-[12px] hover:bg-[#212121] text-[#9b9b9b] hover:text-white transition-colors cursor-pointer"
           >
-            {isAudioPlaying ? (
-              <Volume2 className="w-4 h-4 animate-pulse" />
-            ) : (
-              <VolumeX className="w-4 h-4" />
+            <SquarePen className="w-5 h-5" />
+          </button>
+
+          {/* "..." menu button */}
+          <div className="relative">
+            <button
+              onClick={() => setIsMoreMenuOpen(!isMoreMenuOpen)}
+              title="More options"
+              className="p-2 rounded-[12px] hover:bg-[#212121] text-[#9b9b9b] hover:text-white transition-colors cursor-pointer"
+            >
+              <MoreHorizontal className="w-5 h-5" />
+            </button>
+
+            {/* "..." dropdown menu */}
+            {isMoreMenuOpen && (
+              <>
+                <div 
+                  className="fixed inset-0 z-30" 
+                  onClick={() => setIsMoreMenuOpen(false)} 
+                />
+                <div className="absolute right-0 top-full mt-1.5 w-52 bg-[#212121] border border-[#2a2a2a] rounded-[16px] shadow-2xl p-1.5 z-40 space-y-0.5 animate-fade-in text-xs text-[#ECECEC]">
+                  <button
+                    onClick={() => {
+                      setIsMoreMenuOpen(false);
+                      onExportSession();
+                    }}
+                    disabled={messages.length === 0}
+                    className="w-full flex items-center gap-2.5 px-3 py-2 rounded-[10px] hover:bg-[#282828] text-left transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+                  >
+                    <Download className="w-4 h-4 text-[#9b9b9b]" />
+                    <span>Export transcript (.md)</span>
+                  </button>
+
+                  <button
+                    onClick={() => {
+                      setIsMoreMenuOpen(false);
+                      onToggleAudio();
+                    }}
+                    className="w-full flex items-center gap-2.5 px-3 py-2 rounded-[10px] hover:bg-[#282828] text-left transition-colors cursor-pointer"
+                  >
+                    {isAudioPlaying ? (
+                      <Volume2 className="w-4 h-4 text-emerald-400" />
+                    ) : (
+                      <VolumeX className="w-4 h-4 text-[#9b9b9b]" />
+                    )}
+                    <span>{isAudioPlaying ? 'Mute room sound' : 'Play room sound'}</span>
+                  </button>
+
+                  <button
+                    onClick={() => {
+                      setIsMoreMenuOpen(false);
+                      onOpenPunchcard && onOpenPunchcard('000010 /* IBM 5081 SYSTEM/360 PUNCHCARD FORM */               SEC00010');
+                    }}
+                    className="w-full flex items-center gap-2.5 px-3 py-2 rounded-[10px] hover:bg-[#282828] text-left transition-colors cursor-pointer"
+                  >
+                    <FileText className="w-4 h-4 text-amber-400" />
+                    <span>Inspect Punchcard</span>
+                  </button>
+
+                  <button
+                    onClick={() => {
+                      setIsMoreMenuOpen(false);
+                      onOpenCodex();
+                    }}
+                    className="w-full flex items-center gap-2.5 px-3 py-2 rounded-[10px] hover:bg-[#282828] text-left transition-colors cursor-pointer"
+                  >
+                    <BookOpen className="w-4 h-4 text-[#9b9b9b]" />
+                    <span>Open Codex</span>
+                  </button>
+
+                  <div className="border-t border-[#2a2a2a] my-1"></div>
+
+                  <button
+                    onClick={() => {
+                      setIsMoreMenuOpen(false);
+                      onClearSession();
+                    }}
+                    disabled={messages.length === 0}
+                    className="w-full flex items-center gap-2.5 px-3 py-2 rounded-[10px] hover:bg-[#282828] text-red-400 text-left transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                    <span>Delete séance history</span>
+                  </button>
+                </div>
+              </>
             )}
-          </button>
-
-          {/* Export Transcript */}
-          <button
-            onClick={onExportSession}
-            title="Export Séance Transcript (.md)"
-            disabled={messages.length === 0}
-            className="p-2 rounded-lg hover:bg-[#2f2f2f] text-neutral-400 hover:text-white transition-colors cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
-          >
-            <Download className="w-4 h-4" />
-          </button>
-
-          {/* Open Grimoire Codex */}
-          <button
-            onClick={onOpenCodex}
-            title="The Book of Dead Languages"
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg hover:bg-[#2f2f2f] text-neutral-300 hover:text-white text-[13px] transition-colors cursor-pointer"
-          >
-            <BookOpen className="w-4 h-4" />
-            <span className="hidden sm:inline">Codex</span>
-          </button>
-
-          {/* Clear Chat */}
-          <button
-            onClick={onClearSession}
-            title="Clear Chat"
-            disabled={messages.length === 0}
-            className="p-2 rounded-lg hover:bg-[#2f2f2f] text-neutral-400 hover:text-red-400 transition-colors cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
-          >
-            <Trash2 className="w-4 h-4" />
-          </button>
+          </div>
         </div>
       </header>
 
-      {/* Gemma Loading Banner */}
-      {activeEngineType === 'gemma' && gemmaStatus?.isLoading && (
-        <div className="bg-amber-950/60 border-b border-amber-500/30 px-4 py-2 text-xs text-amber-200 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Cpu className="w-4 h-4 animate-spin text-amber-400" />
-            <span>{gemmaStatus.statusText}</span>
-          </div>
-          <span className="font-mono font-bold">{gemmaStatus.progress}%</span>
-        </div>
-      )}
+      {/* Main Content Area */}
+      {!hasMessages ? (
+        /* EMPTY STATE: Centered vertically, big heading, composer centered max-width 760px, suggestion chips BELOW */
+        <div className="flex-1 flex flex-col items-center justify-center px-4 -mt-10 overflow-y-auto">
+          {/* Big heading (32px, regular weight) */}
+          <h1 className="text-[32px] font-normal text-white text-center tracking-tight mb-8">
+            What shall we summon?
+          </h1>
 
-      {/* Message Feed / Chat Stream - Centered Column max-width 720px */}
-      <div 
-        ref={containerRef}
-        onScroll={handleScroll}
-        className="flex-1 overflow-y-auto px-4 py-6"
-      >
-        <div className="max-w-[720px] mx-auto w-full">
-          {messages.length === 0 && !isStreaming ? (
-            /* Empty State: Centered 720px Welcome Screen */
-            <div className="py-12 md:py-20 text-center space-y-6">
-              <div className="relative w-20 h-20 mx-auto flex items-center justify-center">
-                <div 
-                  className="absolute inset-0 rounded-full border border-amber-500/30 animate-rune-spin-slow"
-                />
-                <div className="relative text-4xl select-none animate-candle-flame">
-                  🕯️
-                </div>
-              </div>
+          {/* Composer centered at max-width 760px */}
+          <div className="w-full max-w-[760px]">
+            <InputBar
+              onSendMessage={onSendMessage}
+              isStreaming={isStreaming}
+              onHastenStream={onHastenStream}
+              disabled={isStreaming}
+              spiritName={spirit.name}
+              onOpenPunchcardPrompt={() => onOpenPunchcard && onOpenPunchcard('000010 /* IBM 5081 SYSTEM/360 PUNCHCARD FORM */               SEC00010')}
+              isThinkActive={isThinkActive}
+              onToggleThink={onToggleThink}
+            />
 
-              <div className="space-y-2">
-                <h2 className="text-2xl md:text-3xl font-semibold text-white tracking-tight">
-                  What would you ask of {spirit.name}?
-                </h2>
-                <p className="text-[15px] text-neutral-400 max-w-lg mx-auto leading-relaxed">
-                  {spirit.quote}
-                </p>
-              </div>
-
-              {/* Quick Ritual Gateways */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-left pt-4">
-                {[
-                  {
-                    title: 'The Curse of Zero Reserved Words',
-                    desc: 'Discover why "IF IF THEN THEN = ELSE;" is legal PL/I syntax.',
-                    prompt: 'Explain the paradox of having no reserved keywords in PL/I with an authentic code example.'
-                  },
-                  {
-                    title: 'The ON-Condition Séance Trap',
-                    desc: 'How the System/360 trapped hardware zerodivide and line printer faults.',
-                    prompt: 'Demonstrate how the ON CONDITION mechanism handled runtime errors in PL/I.'
-                  },
-                  {
-                    title: 'Judgment upon Python & Rust',
-                    desc: 'Hear the monolithic mainframe ghost roast whitespace and borrow checkers.',
-                    prompt: 'What is your honest judgment upon modern languages like Python, Rust, and JavaScript?'
-                  },
-                  {
-                    title: 'The Sacred 80-Column Punchcard',
-                    desc: 'Why columns 73–80 held the salvation of dropped card decks.',
-                    prompt: 'Tell me the history of the 80-column IBM punchcard and show me a JCL card deck.'
-                  }
-                ].map((gateway, gIdx) => (
-                  <button
-                    key={gIdx}
-                    onClick={() => onSendMessage(gateway.prompt)}
-                    className="p-4 rounded-2xl bg-[#282828] hover:bg-[#303030] border border-white/5 text-left transition-all group cursor-pointer shadow-xs"
-                  >
-                    <div className="text-[14px] font-semibold text-white mb-1 flex items-center justify-between">
-                      <span>{gateway.title}</span>
-                      <Sparkles className="w-4 h-4 text-neutral-500 group-hover:text-amber-400 transition-colors" />
-                    </div>
-                    <p className="text-[13px] text-neutral-400 leading-relaxed">
-                      {gateway.desc}
-                    </p>
-                  </button>
-                ))}
-              </div>
+            {/* Suggestion chips BELOW composer, centered, wrapped */}
+            <div className="flex flex-wrap items-center justify-center gap-2 mt-4">
+              {DEFAULT_SUGGESTIONS.map((suggestion, idx) => (
+                <button
+                  key={idx}
+                  onClick={() => onSendMessage(suggestion.prompt)}
+                  className="px-3.5 py-1.5 rounded-full bg-[#212121] hover:bg-[#282828] text-[#ECECEC] text-[13px] font-sans transition-colors cursor-pointer border border-transparent shadow-xs"
+                >
+                  {suggestion.label}
+                </button>
+              ))}
             </div>
-          ) : (
-            /* Render Messages with exactly 24px vertical spacing */
-            <div className="space-y-6">
+          </div>
+        </div>
+      ) : (
+        /* ACTIVE CHAT: Messages stream max-width 760px, composer docked at bottom */
+        <div className="flex-1 flex flex-col overflow-hidden">
+          {/* Messages Column */}
+          <div 
+            ref={containerRef}
+            onScroll={handleScroll}
+            className="flex-1 overflow-y-auto px-4 py-6"
+          >
+            <div className="max-w-[760px] mx-auto w-full space-y-6">
               {messages.map((msg, idx) => (
                 <MessageBubble
                   key={msg.id || idx}
@@ -297,7 +313,7 @@ export default function ChatArea({
                 />
               ))}
 
-              {/* Streaming Message with typing indicator / cursor */}
+              {/* Streaming Message */}
               {isStreaming && streamingMessageData && (
                 <MessageBubble
                   message={{
@@ -308,20 +324,31 @@ export default function ChatArea({
                   onOpenPunchcard={onOpenPunchcard}
                 />
               )}
+
+              <div ref={messagesEndRef} />
             </div>
-          )}
+          </div>
 
-          <div ref={messagesEndRef} />
+          {/* Docked Composer at bottom */}
+          <div className="w-full px-4 pb-3 shrink-0">
+            <div className="max-w-[760px] mx-auto w-full">
+              <InputBar
+                onSendMessage={onSendMessage}
+                isStreaming={isStreaming}
+                onHastenStream={onHastenStream}
+                disabled={isStreaming}
+                spiritName={spirit.name}
+                onOpenPunchcardPrompt={() => onOpenPunchcard && onOpenPunchcard('000010 /* IBM 5081 SYSTEM/360 PUNCHCARD FORM */               SEC00010')}
+                isThinkActive={isThinkActive}
+                onToggleThink={onToggleThink}
+              />
+              <div className="text-center text-[12px] text-[#9b9b9b] mt-2 select-none">
+                Séance • Offline Intelligence • IBM System/360 (1964)
+              </div>
+            </div>
+          </div>
         </div>
-      </div>
-
-      {/* Floating ChatGPT Input Crucible */}
-      <InputBar
-        onSendMessage={onSendMessage}
-        isStreaming={isStreaming}
-        onHastenStream={onHastenStream}
-        disabled={isStreaming}
-      />
+      )}
     </main>
   );
 }
