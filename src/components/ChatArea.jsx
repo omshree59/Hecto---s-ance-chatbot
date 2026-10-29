@@ -368,7 +368,7 @@ export default function ChatArea({
           <div 
             ref={containerRef}
             onScroll={handleScroll}
-            className="flex-1 overflow-y-auto px-4 py-6"
+            className="messages-scroll-container flex-1 overflow-y-auto px-4 py-6"
           >
             <div className="max-w-[760px] mx-auto w-full space-y-6">
               {messages.map((msg, idx) => (

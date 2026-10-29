@@ -352,10 +352,12 @@ Séance replaces flat static backgrounds with hardware-accurate **3D WebGL inter
 
 ### 1. Live 3D Mainframe Background (IBM System/360 & 2401 Tape Unit)
 Runs full-bleed in the vast background of the chat chamber:
-- **Dual Rotating Magnetic Tape Reels**: Interactive Supply and Take-up reels spinning at authentic speeds, dynamically accelerating when the spirit streams tokens or speaks!
-- **Vacuum Column Buffer Tubes**: Animated tape loops fluttering inside acrylic-tinted chambers.
-- **32-Bit Register Display Panel**: Incandescent pilot lights reflecting Program Status Word (`PSW`) and channel activity that cycle in real time.
-- **Subtle Mouse Parallax**: Gentle camera perspective tilt responding smoothly to cursor position.
+- **Continuous 3D Turntable Auto-Rotation**: Hypnotic 360° rotation showcasing the front tape deck, side maintenance latches, braided power cables, and rear cooling louvers glowing with warm vacuum tube filaments.
+- **Interactive Drag-to-Orbit**: Click and drag across the dark chamber background to freely rotate and tilt the mainframe in full 3D space.
+- **Floating 3D HUD Control**: Sleek translucent badge in the bottom-right corner to toggle rotation on/off or reset orientation to center front.
+- **High-Contrast Spinning Tape Reels**: Polished chrome flanges with bold radial spokes and silver indicator dots that spin in real time, accelerating into high-speed spooling during token generation!
+- **Vacuum Column Buffer Tubes**: Animated tape loops fluttering inside acrylic-tinted inspection chambers.
+- **32-Bit Register Display Panel**: Incandescent pilot lamps reflecting Program Status Word (`PSW`) and channel activity that cycle in real time.
 - **Ethereal Ectoplasmic Embers**: 3D particle vortex floating around the mainframe cabinet matching the active ancestor's accent color.
 
 ### 2. Interactive 3D IBM 5081 Hollerith Punchcard Simulator
