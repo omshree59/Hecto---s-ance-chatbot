@@ -30,6 +30,8 @@ export default function App() {
 
   // "Think" Mode (toggles deeper / deliberate manifestation mode)
   const [isThinkActive, setIsThinkActive] = useState(false);
+  const isThinkActiveRef = useRef(false);
+  const activeEngineTypeRef = useRef(activeEngineType);
 
   // Ambiance and Chamber Settings
   const [isAudioPlaying, setIsAudioPlaying] = useState(false);
@@ -167,12 +169,14 @@ export default function App() {
   };
 
   const handleSelectEngineType = async (engineType) => {
+    activeEngineTypeRef.current = engineType;
     setActiveEngineType(engineType);
     if (engineType === 'gemma' && !gemmaEngine.isReady) {
       try {
         await gemmaEngine.initialize();
       } catch (err) {
         alert('WebGPU Error: ' + err.message + '\nDefaulting to Instant Engine.');
+        activeEngineTypeRef.current = 'instant';
         setActiveEngineType('instant');
       }
     }
@@ -280,7 +284,7 @@ export default function App() {
       messages: updatedMsgs
     });
 
-    if (activeEngineType === 'gemma' && gemmaEngine.isReady) {
+    if (activeEngineTypeRef.current === 'gemma' && gemmaEngine.isReady) {
       try {
         let full = '';
         await gemmaEngine.generateStream(updatedMsgs, (delta, acc) => {
@@ -352,7 +356,7 @@ export default function App() {
     }
 
     // --- GEMMA WEBGPU ROUTE ---
-    if (activeEngineType === 'gemma') {
+    if (activeEngineTypeRef.current === 'gemma') {
       setIsStreaming(true);
       setStreamingText('');
       const spiritMessage = {
@@ -418,7 +422,7 @@ export default function App() {
 
     const tokens = spiritMessage.text.match(/\S+\s*/g) || [spiritMessage.text];
     const baseInterval = manifestSpeed === 'whisper' ? 45 : 28;
-    const tokenInterval = isThinkActive ? baseInterval * 1.5 : baseInterval;
+    const tokenInterval = isThinkActiveRef.current ? baseInterval * 1.5 : baseInterval;
 
     initialTypingDelayRef.current = setTimeout(() => {
       let tokenIndex = 0;
@@ -619,7 +623,10 @@ export default function App() {
         isAudioPlaying={isAudioPlaying}
         onToggleAudio={handleToggleAudio}
         isThinkActive={isThinkActive}
-        onToggleThink={() => setIsThinkActive(!isThinkActive)}
+        onToggleThink={() => {
+          isThinkActiveRef.current = !isThinkActiveRef.current;
+          setIsThinkActive(isThinkActiveRef.current);
+        }}
         onOpenVoiceMode={() => setIsVoiceModeOpen(true)}
         candleIntensity={candleIntensity}
       />

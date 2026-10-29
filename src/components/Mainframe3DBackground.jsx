@@ -1,6 +1,6 @@
 import React, { useRef, useEffect, useState } from 'react';
 import * as THREE from 'three';
-import { RotateCw, Pause, Play, Compass } from 'lucide-react';
+import { RotateCw, Pause, Compass } from 'lucide-react';
 import { SPIRITS } from '../engine/necromancyEngine';
 
 // --- GLORIFIED IBM TEXTURE GENERATORS ---
@@ -260,6 +260,83 @@ function createSpecPlateTexture() {
   return new THREE.CanvasTexture(canvas);
 }
 
+function createEmberTexture() {
+  const canvas = document.createElement('canvas');
+  canvas.width = 64;
+  canvas.height = 64;
+  const ctx = canvas.getContext('2d');
+  const grad = ctx.createRadialGradient(32, 32, 0, 32, 32, 32);
+  grad.addColorStop(0, 'rgba(255,255,255,1)');
+  grad.addColorStop(0.22, 'rgba(255,220,150,0.9)');
+  grad.addColorStop(0.55, 'rgba(245,158,11,0.35)');
+  grad.addColorStop(1, 'rgba(245,158,11,0)');
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, 64, 64);
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.needsUpdate = true;
+  return texture;
+}
+
+function createChadTexture() {
+  const canvas = document.createElement('canvas');
+  canvas.width = 32;
+  canvas.height = 16;
+  const ctx = canvas.getContext('2d');
+  ctx.fillStyle = '#d6b17a';
+  ctx.fillRect(1, 1, 30, 14);
+  ctx.fillStyle = '#1a1208';
+  for (let i = 0; i < 7; i++) {
+    ctx.fillRect(3 + i * 4, 4, 2, 8);
+  }
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.needsUpdate = true;
+  return texture;
+}
+
+function getAtmosphereProfile() {
+  const cores = navigator.hardwareConcurrency ?? 4;
+  const memory = navigator.deviceMemory;
+  const reduced = window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches;
+  const low = (typeof memory === 'number' && memory <= 4) || cores <= 4;
+  const mid = (typeof memory === 'number' && memory <= 8) || cores <= 8;
+  if (reduced) return { quality: 'reduced', multiplier: 0.2, fps: 30, pixelRatio: 1, reduced: true };
+  if (low) return { quality: 'low', multiplier: 0.5, fps: 30, pixelRatio: 1.25, reduced: false };
+  if (mid) return { quality: 'medium', multiplier: 0.75, fps: 60, pixelRatio: 1.5, reduced: false };
+  return { quality: 'high', multiplier: 1, fps: 60, pixelRatio: 1.75, reduced: false };
+}
+
+function createPointCloud({ count, spread, yRange, zRange, color, size, map, opacity = 0.7 }) {
+  const geometry = new THREE.BufferGeometry();
+  const positions = new Float32Array(count * 3);
+  const velocities = new Float32Array(count * 3);
+  for (let i = 0; i < count; i++) {
+    positions[i * 3] = (Math.random() - 0.5) * spread;
+    positions[i * 3 + 1] = (Math.random() - 0.5) * yRange;
+    positions[i * 3 + 2] = (Math.random() - 0.5) * zRange;
+    velocities[i * 3] = (Math.random() - 0.5) * 0.012;
+    velocities[i * 3 + 1] = Math.random() * 0.018 + 0.004;
+    velocities[i * 3 + 2] = (Math.random() - 0.5) * 0.01;
+  }
+  geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+  const material = new THREE.PointsMaterial({
+    color,
+    size,
+    map,
+    transparent: true,
+    opacity,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false,
+    sizeAttenuation: true
+  });
+  return {
+    system: new THREE.Points(geometry, material),
+    velocities,
+    count,
+    geometry,
+    material
+  };
+}
+
 export default function Mainframe3DBackground({
   activeSpiritId = 'pli',
   isStreaming = false,
@@ -279,8 +356,20 @@ export default function Mainframe3DBackground({
   const tapeLoopRightRef = useRef(null);
   const registerLightsRef = useRef([]);
   const particleSystemRef = useRef(null);
+  const atmosphereRef = useRef(null);
+  const mouseRef = useRef({ x: 0, y: 0 });
+  const isStreamingRef = useRef(isStreaming);
+  const hasMessagesRef = useRef(hasMessages);
 
   const spirit = SPIRITS[activeSpiritId] || SPIRITS.pli;
+
+  useEffect(() => {
+    isStreamingRef.current = isStreaming;
+  }, [isStreaming]);
+
+  useEffect(() => {
+    hasMessagesRef.current = hasMessages;
+  }, [hasMessages]);
 
   // Auto-rotation & User Drag State
   const [isAutoRotate, setIsAutoRotate] = useState(true);
@@ -324,8 +413,14 @@ export default function Mainframe3DBackground({
     let width = containerRef.current.clientWidth || window.innerWidth;
     let height = containerRef.current.clientHeight || window.innerHeight;
 
-    // Track created textures for disposal on unmount
+    // Track GPU resources for disposal on unmount
     const createdTextures = [];
+    const createdGeometries = [];
+    const createdMaterials = [];
+    const profile = getAtmosphereProfile();
+    const emberTex = createEmberTexture();
+    const chadTex = createChadTexture();
+    createdTextures.push(emberTex, chadTex);
 
     // 1. Scene with subtle deep atmospheric fog
     const scene = new THREE.Scene();
@@ -340,9 +435,9 @@ export default function Mainframe3DBackground({
     // 3. Renderer with antialiasing & shadow support
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: 'high-performance' });
     renderer.setSize(width, height);
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.75));
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, profile.pixelRatio));
     renderer.shadowMap.enabled = true;
-    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    renderer.shadowMap.type = THREE.PCFShadowMap;
     rendererRef.current = renderer;
 
     containerRef.current.replaceChildren(renderer.domElement);
@@ -432,6 +527,8 @@ export default function Mainframe3DBackground({
     const headerDecal = new THREE.Mesh(headerDecalGeo, headerDecalMat);
     headerDecal.position.set(0, 0, 0.016);
     headerBox.add(headerDecal);
+    createdGeometries.push(headerBoxGeo, headerDecalGeo, cabinetGeo, panelGeo);
+    createdMaterials.push(headerBoxMat, headerDecalMat, cabinetMat, panelMat);
 
     // 6. Magnetic Tape Reels (Left Supply & Right Take-up)
     // High-contrast polished chrome flanges with prominent cutouts and silver registration rim bolts
@@ -575,6 +672,8 @@ export default function Mainframe3DBackground({
     const gap = new THREE.Mesh(gapGeo, gapMat);
     gap.position.set(0, 0.82, 0.76);
     mainframeGroup.add(gap);
+    createdGeometries.push(gapGeo);
+    createdMaterials.push(gapMat);
 
     // 7. Vacuum Column Buffer Chambers
     const colFrameGeo = new THREE.BoxGeometry(0.82, 1.42, 0.15);
@@ -752,34 +851,118 @@ export default function Mainframe3DBackground({
     rightHandle.position.set(1.19, 0, 0);
     mainframeGroup.add(rightHandle);
 
-    // 11. Floating Ethereal Séance Embers / Dust Particles
-    const particleCount = 140;
-    const particleGeo = new THREE.BufferGeometry();
-    const particlePositions = new Float32Array(particleCount * 3);
-    const particleVels = [];
+    // 11. Chamber atmosphere: embers, punchcard chads, rings, orbs, scan, floor
+    const emberCount = Math.max(40, Math.round(220 * profile.multiplier));
+    const chadCount = Math.max(18, Math.round(90 * profile.multiplier));
+    const embers = createPointCloud({
+      count: emberCount,
+      spread: 8.2,
+      yRange: 6.2,
+      zRange: 6.0,
+      color: spiritColor,
+      size: 0.085,
+      map: emberTex,
+      opacity: 0.82
+    });
+    scene.add(embers.system);
+    createdGeometries.push(embers.geometry);
+    createdMaterials.push(embers.material);
+    particleSystemRef.current = embers;
 
-    for (let i = 0; i < particleCount; i++) {
-      particlePositions[i * 3] = (Math.random() - 0.5) * 6.5;
-      particlePositions[i * 3 + 1] = (Math.random() - 0.5) * 5.5;
-      particlePositions[i * 3 + 2] = (Math.random() - 0.5) * 5.0;
-      particleVels.push({
-        vx: (Math.random() - 0.5) * 0.006,
-        vy: Math.random() * 0.010 + 0.003,
-        vz: (Math.random() - 0.5) * 0.006
+    const chads = createPointCloud({
+      count: chadCount,
+      spread: 9.0,
+      yRange: 7.0,
+      zRange: 5.5,
+      color: 0xd6b17a,
+      size: 0.07,
+      map: chadTex,
+      opacity: 0.55
+    });
+    chads.material.blending = THREE.NormalBlending;
+    scene.add(chads.system);
+    createdGeometries.push(chads.geometry);
+    createdMaterials.push(chads.material);
+
+    const grid = new THREE.GridHelper(22, 44, 0x1d4ed8, 0x111827);
+    grid.position.y = -2.78;
+    const gridMats = Array.isArray(grid.material) ? grid.material : [grid.material];
+    gridMats.forEach((mat) => {
+      mat.transparent = true;
+      mat.opacity = 0.22;
+    });
+    scene.add(grid);
+
+    const ringGeo = new THREE.TorusGeometry(2.05, 0.012, 8, 72);
+    const ringMatA = new THREE.MeshBasicMaterial({
+      color: spiritColor,
+      transparent: true,
+      opacity: 0.38
+    });
+    const ringMatB = new THREE.MeshBasicMaterial({
+      color: 0x38bdf8,
+      transparent: true,
+      opacity: 0.22
+    });
+    const ringA = new THREE.Mesh(ringGeo, ringMatA);
+    ringA.rotation.x = Math.PI / 2;
+    ringA.position.y = -1.15;
+    const ringB = new THREE.Mesh(ringGeo, ringMatB);
+    ringB.rotation.x = Math.PI / 2.15;
+    ringB.position.y = 1.55;
+    scene.add(ringA, ringB);
+    createdGeometries.push(ringGeo);
+    createdMaterials.push(ringMatA, ringMatB);
+
+    const orbCount = profile.reduced ? 2 : profile.quality === 'low' ? 3 : 5;
+    const orbGeo = new THREE.SphereGeometry(0.045, 12, 12);
+    const orbMat = new THREE.MeshBasicMaterial({
+      color: spiritColor,
+      transparent: true,
+      opacity: 0.9
+    });
+    createdGeometries.push(orbGeo);
+    createdMaterials.push(orbMat);
+    const orbs = [];
+    for (let i = 0; i < orbCount; i++) {
+      const mesh = new THREE.Mesh(orbGeo, orbMat);
+      scene.add(mesh);
+      orbs.push({
+        mesh,
+        radius: 2.15 + (i % 3) * 0.38,
+        speed: 0.22 + i * 0.11,
+        phase: i * 1.15,
+        height: -0.4 + (i % 4) * 0.55
       });
     }
 
-    particleGeo.setAttribute('position', new THREE.BufferAttribute(particlePositions, 3));
-    const particleMat = new THREE.PointsMaterial({
+    const scanBarGeo = new THREE.BoxGeometry(2.08, 0.035, 0.02);
+    const scanBarMat = new THREE.MeshBasicMaterial({
       color: spiritColor,
-      size: 0.052,
       transparent: true,
-      opacity: 0.65,
-      blending: THREE.AdditiveBlending
+      opacity: 0.55
     });
-    const particleSystem = new THREE.Points(particleGeo, particleMat);
-    scene.add(particleSystem);
-    particleSystemRef.current = { system: particleSystem, vels: particleVels };
+    const scanBar = new THREE.Mesh(scanBarGeo, scanBarMat);
+    scanBar.position.set(0, 0.4, 0.735);
+    mainframeGroup.add(scanBar);
+    createdGeometries.push(scanBarGeo);
+    createdMaterials.push(scanBarMat);
+
+    atmosphereRef.current = {
+      embers,
+      chads,
+      grid,
+      rings: [ringA, ringB],
+      orbs,
+      scanBar,
+      auraLight,
+      fillLight,
+      spotLight,
+      tubeGlowLight,
+      headerMat: headerDecalMat,
+      gap,
+      consoleBadgeMat
+    };
 
     // 12. Mouse / Touch Drag Orbit Interaction
     const handlePointerDown = (e) => {
@@ -797,6 +980,8 @@ export default function Mainframe3DBackground({
     };
 
     const handlePointerMove = (e) => {
+      mouseRef.current.x = (e.clientX / window.innerWidth) * 2 - 1;
+      mouseRef.current.y = -((e.clientY / window.innerHeight) * 2 - 1);
       if (!isDraggingRef.current) return;
       const dx = e.clientX - dragStartPosRef.current.x;
       const dy = e.clientY - dragStartPosRef.current.y;
@@ -818,87 +1003,211 @@ export default function Mainframe3DBackground({
     window.addEventListener('pointerup', handlePointerUp);
 
     // 13. High-Performance Render Loop
-    let clock = new THREE.Clock();
+    const loopStartedAt = performance.now();
     let lightTimer = 0;
+    let running = true;
+    const frameInterval = 1000 / profile.fps;
+    let lastFrame = performance.now();
+    let frameAcc = 0;
 
-    const animate = () => {
+    const stepCloud = (cloud, elapsedTime, boost, mode) => {
+      const pos = cloud.geometry.attributes.position.array;
+      const vels = cloud.velocities;
+      for (let i = 0; i < cloud.count; i++) {
+        if (mode === 'fall') {
+          pos[i * 3 + 1] -= (0.012 + vels[i * 3 + 1]) * boost;
+          pos[i * 3] += Math.sin(elapsedTime * 0.9 + i) * 0.004 + vels[i * 3];
+          if (pos[i * 3 + 1] < -3.2) {
+            pos[i * 3 + 1] = 3.1;
+            pos[i * 3] = (Math.random() - 0.5) * 9.0;
+            pos[i * 3 + 2] = (Math.random() - 0.5) * 5.5;
+          }
+        } else {
+          pos[i * 3 + 1] += vels[i * 3 + 1] * boost;
+          pos[i * 3] += Math.sin(elapsedTime * 1.1 + i) * 0.0035 + vels[i * 3] * 0.4;
+          pos[i * 3 + 2] += Math.cos(elapsedTime * 0.7 + i * 0.2) * 0.002;
+          if (pos[i * 3 + 1] > 3.2) {
+            pos[i * 3 + 1] = -2.6;
+            pos[i * 3] = (Math.random() - 0.5) * 8.0;
+            pos[i * 3 + 2] = (Math.random() - 0.5) * 5.5;
+          }
+        }
+      }
+      cloud.geometry.attributes.position.needsUpdate = true;
+    };
+
+    const animate = (now) => {
+      if (!running) return;
       animationFrameRef.current = requestAnimationFrame(animate);
-      const delta = clock.getDelta();
-      const elapsedTime = clock.getElapsedTime();
+      const elapsedMs = now - lastFrame;
+      lastFrame = now;
+      frameAcc += elapsedMs;
+      if (frameAcc < frameInterval) return;
+      const dt = Math.min(0.05, frameAcc / 1000);
+      frameAcc = 0;
+
+      const delta = dt;
+      const elapsedTime = (now - loopStartedAt) / 1000;
+      const streaming = isStreamingRef.current;
+      const chatting = hasMessagesRef.current;
+      const motionScale = profile.reduced ? 0.15 : 1;
+      const intensity = streaming ? 1.85 : 1;
 
       // Continuous 3D Auto-Rotation
-      if (isAutoRotateRef.current) {
-        // If user dragged recently, give a 2.5 second idle pause before resuming auto-rotation smoothly
+      if (isAutoRotateRef.current && !profile.reduced) {
         const isRecentlyInteracted = Date.now() - lastInteractionTimeRef.current < 2500;
         if (!isRecentlyInteracted && !isDraggingRef.current) {
-          targetRotationYRef.current += delta * 0.35;
+          targetRotationYRef.current += delta * (streaming ? 0.72 : 0.48);
         }
       }
 
-      // Smooth dampening / lerp rotation
       currentRotationYRef.current += (targetRotationYRef.current - currentRotationYRef.current) * 0.08;
       currentRotationXRef.current += (targetRotationXRef.current - currentRotationXRef.current) * 0.08;
 
       if (mainframeGroupRef.current) {
-        // Apply 3D Rotation
-        mainframeGroupRef.current.rotation.y = currentRotationYRef.current;
-        mainframeGroupRef.current.rotation.x = currentRotationXRef.current + Math.sin(elapsedTime * 0.9) * 0.025;
-        mainframeGroupRef.current.rotation.z = Math.cos(elapsedTime * 0.7) * 0.015;
-
-        // Ethereal floating levitation bobbing
-        mainframeGroupRef.current.position.y = (hasMessages ? -0.28 : 0) + Math.sin(elapsedTime * 1.3) * 0.07;
+        const shake = streaming ? Math.sin(elapsedTime * 38) * 0.006 : 0;
+        mainframeGroupRef.current.rotation.y = currentRotationYRef.current + shake;
+        mainframeGroupRef.current.rotation.x =
+          currentRotationXRef.current + Math.sin(elapsedTime * 1.15) * 0.038 * motionScale;
+        mainframeGroupRef.current.rotation.z = Math.cos(elapsedTime * 0.82) * 0.022 * motionScale;
+        mainframeGroupRef.current.position.y =
+          (chatting ? -0.28 : 0) + Math.sin(elapsedTime * 1.45) * 0.09 * motionScale;
+        mainframeGroupRef.current.position.x = Math.sin(elapsedTime * 0.35) * 0.05 * motionScale;
       }
 
-      // High-Contrast Magnetic Tape Reels Spin
+      const spool = 1 + Math.sin(elapsedTime * (streaming ? 1.6 : 0.85)) * 0.42;
       if (leftReelRef.current) {
-        leftReelRef.current.rotation.z += delta * reelSpeedRef.current;
+        leftReelRef.current.rotation.z += delta * reelSpeedRef.current * spool * (streaming ? 1.25 : 1);
       }
       if (rightReelRef.current) {
-        rightReelRef.current.rotation.z += delta * (reelSpeedRef.current * 0.86);
+        rightReelRef.current.rotation.z += delta * reelSpeedRef.current * (2.05 - spool) * 0.86;
       }
 
-      // Flutter vacuum loops
+      const flutter = streaming ? 11.5 : 5.2;
       if (tapeLoopLeftRef.current) {
-        tapeLoopLeftRef.current.position.y = -0.16 + Math.sin(elapsedTime * (isStreaming ? 9.5 : 4.5)) * 0.035;
+        tapeLoopLeftRef.current.position.y = -0.16 + Math.sin(elapsedTime * flutter) * 0.055;
+        tapeLoopLeftRef.current.scale.y = 1 + Math.sin(elapsedTime * flutter * 0.5) * 0.08;
       }
       if (tapeLoopRightRef.current) {
-        tapeLoopRightRef.current.position.y = -0.16 + Math.cos(elapsedTime * (isStreaming ? 8.8 : 4.0)) * 0.035;
+        tapeLoopRightRef.current.position.y = -0.16 + Math.cos(elapsedTime * (flutter * 0.92)) * 0.055;
+        tapeLoopRightRef.current.scale.y = 1 + Math.cos(elapsedTime * flutter * 0.5) * 0.08;
       }
 
-      // Blinking register pilot lights
       lightTimer += delta;
-      if (lightTimer > 0.09) {
+      const lampInterval = streaming ? 0.045 : 0.085;
+      if (lightTimer > lampInterval) {
         lightTimer = 0;
-        registerLightsRef.current.forEach((lamp) => {
-          if (Math.random() > 0.72) {
-            const current = lamp.material.emissiveIntensity;
-            lamp.material.emissiveIntensity = current > 0.5 ? 0.08 : 1.6;
+        const sweep = Math.floor((elapsedTime * (streaming ? 18 : 8)) % 16);
+        registerLightsRef.current.forEach((lamp, idx) => {
+          const col = idx % 16;
+          if (col === sweep || col === (sweep + 8) % 16) {
+            lamp.material.emissiveIntensity = 2.2;
+          } else if (Math.random() > (streaming ? 0.55 : 0.74)) {
+            lamp.material.emissiveIntensity = lamp.material.emissiveIntensity > 0.5 ? 0.08 : 1.7;
           }
         });
       }
 
-      // Animate floating ethereal particles
-      if (particleSystemRef.current) {
-        const pos = particleSystemRef.current.system.geometry.attributes.position.array;
-        const vels = particleSystemRef.current.vels;
-
-        for (let i = 0; i < particleCount; i++) {
-          pos[i * 3 + 1] += vels[i].vy;
-          pos[i * 3] += Math.sin(elapsedTime * 0.8 + i) * 0.002;
-
-          if (pos[i * 3 + 1] > 2.8) {
-            pos[i * 3 + 1] = -2.2;
-            pos[i * 3] = (Math.random() - 0.5) * 6.0;
-            pos[i * 3 + 2] = (Math.random() - 0.5) * 4.5;
-          }
+      const fx = atmosphereRef.current;
+      if (fx) {
+        if (fx.embers) {
+          stepCloud(fx.embers, elapsedTime, intensity * motionScale, 'rise');
+          fx.embers.system.rotation.y = elapsedTime * 0.045 * intensity;
+          fx.embers.material.opacity = chatting ? 0.55 : 0.82;
+          fx.embers.material.size = streaming ? 0.11 : 0.085;
         }
-        particleSystemRef.current.system.geometry.attributes.position.needsUpdate = true;
+        if (fx.chads) {
+          stepCloud(fx.chads, elapsedTime, (streaming ? 1.7 : 1) * motionScale, 'fall');
+          fx.chads.system.rotation.y = -elapsedTime * 0.03;
+        }
+        if (fx.rings) {
+          fx.rings[0].rotation.z = elapsedTime * 0.35 * intensity;
+          fx.rings[1].rotation.z = -elapsedTime * 0.22 * intensity;
+          fx.rings[0].scale.setScalar(1 + Math.sin(elapsedTime * 1.4) * 0.04);
+          fx.rings[1].scale.setScalar(1 + Math.cos(elapsedTime * 1.1) * 0.05);
+        }
+        fx.orbs.forEach((orb) => {
+          const t = elapsedTime * orb.speed * intensity + orb.phase;
+          orb.mesh.position.set(
+            Math.cos(t) * orb.radius,
+            orb.height + Math.sin(t * 1.7) * 0.28,
+            Math.sin(t) * orb.radius * 0.72 - 0.4
+          );
+          orb.mesh.scale.setScalar(0.85 + Math.sin(t * 3) * 0.25);
+        });
+        if (fx.scanBar) {
+          fx.scanBar.position.y = Math.sin(elapsedTime * (streaming ? 1.8 : 0.85)) * 1.55;
+          fx.scanBar.material.opacity = 0.28 + Math.abs(Math.sin(elapsedTime * 3)) * 0.45;
+        }
+        if (fx.auraLight) {
+          fx.auraLight.intensity = (streaming ? 5.2 : 3.4) + Math.sin(elapsedTime * 2.2) * 0.8;
+          fx.auraLight.position.set(
+            Math.cos(elapsedTime * 0.55) * 2.9,
+            1.6 + Math.sin(elapsedTime * 0.9) * 0.7,
+            1.6 + Math.sin(elapsedTime * 0.4) * 0.6
+          );
+        }
+        if (fx.fillLight) {
+          fx.fillLight.intensity = 1.7 + Math.sin(elapsedTime * 1.3) * 0.5;
+        }
+        if (fx.spotLight) {
+          fx.spotLight.intensity = 3.2 + Math.sin(elapsedTime * 0.7) * 0.45;
+        }
+        if (fx.tubeGlowLight) {
+          fx.tubeGlowLight.intensity = (streaming ? 4.4 : 2.8) + Math.sin(elapsedTime * 5.5) * 0.9;
+        }
+        if (fx.headerMat) {
+          fx.headerMat.emissiveIntensity = 0.32 + Math.sin(elapsedTime * 2.4) * 0.18;
+        }
+        if (fx.consoleBadgeMat) {
+          fx.consoleBadgeMat.emissiveIntensity = 0.16 + Math.sin(elapsedTime * 1.6) * 0.12;
+        }
+        if (fx.gap) {
+          fx.gap.scale.y = 1 + Math.sin(elapsedTime * (streaming ? 14 : 6)) * 0.35;
+        }
+        if (fx.grid) {
+          const mats = Array.isArray(fx.grid.material) ? fx.grid.material : [fx.grid.material];
+          const pulse = 0.14 + Math.sin(elapsedTime * 1.8) * 0.08;
+          mats.forEach((mat) => {
+            mat.opacity = pulse;
+          });
+          fx.grid.rotation.y = elapsedTime * 0.03;
+        }
+      }
+
+      scene.fog.density = 0.072 + Math.sin(elapsedTime * 0.5) * 0.012 + (streaming ? 0.01 : 0);
+
+      if (cameraRef.current && !isDraggingRef.current) {
+        const lookY = chatting ? -0.18 : 0.12;
+        const breatheX = Math.sin(elapsedTime * 0.18) * 0.16 * motionScale;
+        const breatheY = Math.sin(elapsedTime * 0.26) * 0.1 * motionScale;
+        const parallaxX = mouseRef.current.x * 0.28 * motionScale;
+        const parallaxY = mouseRef.current.y * 0.14 * motionScale;
+        cameraRef.current.position.x += (breatheX + parallaxX - cameraRef.current.position.x) * 0.035;
+        cameraRef.current.position.y += (0.15 + breatheY + parallaxY - cameraRef.current.position.y) * 0.035;
+        cameraRef.current.position.z = 5.8 + Math.sin(elapsedTime * 0.21) * 0.12 * motionScale;
+        cameraRef.current.lookAt(0, lookY, -0.55);
       }
 
       renderer.render(scene, camera);
     };
 
-    animate();
+    animate(performance.now());
+
+    const handleVisibility = () => {
+      if (document.hidden) {
+        running = false;
+        if (animationFrameRef.current) cancelAnimationFrame(animationFrameRef.current);
+        return;
+      }
+      if (!running) {
+        running = true;
+        lastFrame = performance.now();
+        frameAcc = 0;
+        animate(performance.now());
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibility);
 
     const handleResize = () => {
       if (!containerRef.current || !rendererRef.current || !cameraRef.current) return;
@@ -912,12 +1221,16 @@ export default function Mainframe3DBackground({
     window.addEventListener('resize', handleResize);
 
     return () => {
+      running = false;
       if (animationFrameRef.current) cancelAnimationFrame(animationFrameRef.current);
       window.removeEventListener('pointerdown', handlePointerDown);
       window.removeEventListener('pointermove', handlePointerMove);
       window.removeEventListener('pointerup', handlePointerUp);
       window.removeEventListener('resize', handleResize);
+      document.removeEventListener('visibilitychange', handleVisibility);
       createdTextures.forEach((tex) => tex.dispose());
+      createdGeometries.forEach((geo) => geo.dispose());
+      createdMaterials.forEach((mat) => mat.dispose());
       renderer.dispose();
     };
   }, [activeSpiritId, hasMessages]);
@@ -932,10 +1245,22 @@ export default function Mainframe3DBackground({
       />
 
       {/* Atmospheric Vignette & Contrast Overlay so chat text is always 100% legible */}
-      <div 
-        className="absolute inset-0 bg-radial from-black/20 via-black/55 to-[#000000] pointer-events-none" 
+      <div
+        className="absolute inset-0 bg-radial from-black/15 via-black/52 to-[#000000] pointer-events-none"
         style={{ mixBlendMode: 'multiply' }}
       />
+      <div
+        className="seance-spirit-wash absolute inset-0 pointer-events-none"
+        data-streaming={isStreaming ? '' : undefined}
+        style={{ '--seance-spirit': spirit.accentColor || '#f59e0b' }}
+      />
+      <div
+        className="seance-chamber-sweep absolute pointer-events-none"
+        style={{ '--seance-spirit': spirit.accentColor || '#f59e0b' }}
+      />
+      <div className="seance-iris absolute inset-0 pointer-events-none" />
+      <div className="seance-scanlines absolute inset-0 pointer-events-none" />
+      <div className="seance-grain absolute inset-0 pointer-events-none" />
 
       {/* Sleek Floating 3D Control HUD Badge in bottom-right corner */}
       <div className="absolute bottom-20 right-3 sm:bottom-4 sm:right-4 z-20 flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#141824]/90 hover:bg-[#1e2333]/95 backdrop-blur-md border border-blue-500/30 text-[#cbd5e1] text-[11px] font-sans shadow-xl transition-all select-none">

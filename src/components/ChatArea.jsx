@@ -327,7 +327,7 @@ export default function ChatArea({
       {/* Main Content Area (Relative z-10 layered cleanly over 3D background) */}
       {!hasMessages ? (
         /* EMPTY STATE: Centered vertically over the 3D mainframe reels, big heading, composer centered max-width 760px, SMART CHIPS BELOW */
-        <div className="flex-1 flex flex-col items-center justify-center px-4 -mt-10 overflow-y-auto relative z-10">
+        <div className="flex-1 flex flex-col items-center justify-center px-4 -mt-10 overflow-visible relative z-10">
           {/* Glorified IBM System/360 Heritage Pill */}
           <div className="flex items-center gap-2 px-3.5 py-1.5 mb-3 rounded-full bg-[#101726]/90 border border-blue-500/30 text-blue-300 text-xs font-mono tracking-wider shadow-lg shadow-blue-950/40 select-none animate-fade-in backdrop-blur-md">
             <span className="w-2 h-2 rounded-full bg-blue-400 animate-pulse"></span>
@@ -342,7 +342,7 @@ export default function ChatArea({
           </h1>
 
           {/* Composer centered at max-width 760px */}
-          <div className="w-full max-w-[760px] drop-shadow-[0_8px_30px_rgba(0,0,0,0.6)]">
+          <div className="w-full max-w-[760px] relative z-20 drop-shadow-[0_8px_30px_rgba(0,0,0,0.6)]">
             <InputBar
               onSendMessage={onSendMessage}
               isStreaming={isStreaming}
@@ -353,6 +353,9 @@ export default function ChatArea({
               isThinkActive={isThinkActive}
               onToggleThink={onToggleThink}
               onOpenVoiceMode={onOpenVoiceMode}
+              activeEngineType={activeEngineType}
+              onSelectEngineType={onSelectEngineType}
+              sparkColor={spirit.accentColor || '#f59e0b'}
             />
 
             {/* Persona and stage-specific smart suggestion chips BELOW composer */}
@@ -407,7 +410,7 @@ export default function ChatArea({
 
           {/* Docked Composer at bottom */}
           <div className="w-full px-4 pb-3 shrink-0">
-            <div className="max-w-[760px] mx-auto w-full drop-shadow-[0_8px_30px_rgba(0,0,0,0.7)]">
+            <div className="max-w-[760px] mx-auto w-full relative z-20 drop-shadow-[0_8px_30px_rgba(0,0,0,0.7)]">
               <InputBar
                 onSendMessage={onSendMessage}
                 isStreaming={isStreaming}
@@ -418,6 +421,9 @@ export default function ChatArea({
                 isThinkActive={isThinkActive}
                 onToggleThink={onToggleThink}
                 onOpenVoiceMode={onOpenVoiceMode}
+                activeEngineType={activeEngineType}
+                onSelectEngineType={onSelectEngineType}
+                sparkColor={spirit.accentColor || '#f59e0b'}
               />
               <div className="flex items-center justify-between text-[11px] text-[#9b9b9b] mt-2 px-2 select-none">
                 <div className="flex items-center gap-1.5">
