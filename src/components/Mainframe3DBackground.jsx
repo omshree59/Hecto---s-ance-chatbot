@@ -1,5 +1,38 @@
 import React, { useRef, useEffect, useState } from 'react';
-import * as THREE from 'three';
+import {
+  AdditiveBlending,
+  AmbientLight,
+  BoxGeometry,
+  BufferAttribute,
+  BufferGeometry,
+  CanvasTexture,
+  CatmullRomCurve3,
+  CircleGeometry,
+  Color,
+  CylinderGeometry,
+  DirectionalLight,
+  FogExp2,
+  GridHelper,
+  Group,
+  Mesh,
+  MeshBasicMaterial,
+  MeshPhysicalMaterial,
+  MeshStandardMaterial,
+  NormalBlending,
+  PCFShadowMap,
+  PerspectiveCamera,
+  PlaneGeometry,
+  PointLight,
+  Points,
+  PointsMaterial,
+  Scene,
+  SphereGeometry,
+  SpotLight,
+  TorusGeometry,
+  TubeGeometry,
+  Vector3,
+  WebGLRenderer
+} from 'three';
 import { RotateCw, Pause, Compass } from 'lucide-react';
 import { SPIRITS } from '../engine/necromancyEngine';
 
@@ -101,7 +134,7 @@ function createIBMHeaderTexture() {
   ctx.shadowBlur = 0;
   ctx.fillText('READY / ON-LINE', 980, 88);
 
-  const texture = new THREE.CanvasTexture(canvas);
+  const texture = new CanvasTexture(canvas);
   texture.anisotropy = 8;
   return texture;
 }
@@ -146,7 +179,7 @@ function createReelHubTexture() {
   ctx.shadowBlur = 8;
   ctx.fillText('IBM', 128, 128);
 
-  return new THREE.CanvasTexture(canvas);
+  return new CanvasTexture(canvas);
 }
 
 /**
@@ -175,7 +208,7 @@ function createHeadBadgeTexture() {
   ctx.fillStyle = '#d4af37';
   ctx.fillText('9-TRACK HIGH DENSITY TAPE HEAD', 256, 92);
 
-  return new THREE.CanvasTexture(canvas);
+  return new CanvasTexture(canvas);
 }
 
 /**
@@ -211,7 +244,7 @@ function createConsoleBadgeTexture() {
   ctx.fillStyle = '#fde047';
   ctx.fillText('SYSTEM / 360 DATA PROCESSING SYSTEM • ARMONK, N.Y.', 512, 90);
 
-  return new THREE.CanvasTexture(canvas);
+  return new CanvasTexture(canvas);
 }
 
 /**
@@ -257,7 +290,7 @@ function createSpecPlateTexture() {
   ctx.font = 'italic 13px "Georgia", serif';
   ctx.fillText('MADE IN U.S.A. • ARMONK, NEW YORK', 256, 220);
 
-  return new THREE.CanvasTexture(canvas);
+  return new CanvasTexture(canvas);
 }
 
 function createEmberTexture() {
@@ -272,7 +305,7 @@ function createEmberTexture() {
   grad.addColorStop(1, 'rgba(245,158,11,0)');
   ctx.fillStyle = grad;
   ctx.fillRect(0, 0, 64, 64);
-  const texture = new THREE.CanvasTexture(canvas);
+  const texture = new CanvasTexture(canvas);
   texture.needsUpdate = true;
   return texture;
 }
@@ -288,7 +321,7 @@ function createChadTexture() {
   for (let i = 0; i < 7; i++) {
     ctx.fillRect(3 + i * 4, 4, 2, 8);
   }
-  const texture = new THREE.CanvasTexture(canvas);
+  const texture = new CanvasTexture(canvas);
   texture.needsUpdate = true;
   return texture;
 }
@@ -306,7 +339,7 @@ function getAtmosphereProfile() {
 }
 
 function createPointCloud({ count, spread, yRange, zRange, color, size, map, opacity = 0.7 }) {
-  const geometry = new THREE.BufferGeometry();
+  const geometry = new BufferGeometry();
   const positions = new Float32Array(count * 3);
   const velocities = new Float32Array(count * 3);
   for (let i = 0; i < count; i++) {
@@ -317,19 +350,19 @@ function createPointCloud({ count, spread, yRange, zRange, color, size, map, opa
     velocities[i * 3 + 1] = Math.random() * 0.018 + 0.004;
     velocities[i * 3 + 2] = (Math.random() - 0.5) * 0.01;
   }
-  geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-  const material = new THREE.PointsMaterial({
+  geometry.setAttribute('position', new BufferAttribute(positions, 3));
+  const material = new PointsMaterial({
     color,
     size,
     map,
     transparent: true,
     opacity,
-    blending: THREE.AdditiveBlending,
+    blending: AdditiveBlending,
     depthWrite: false,
     sizeAttenuation: true
   });
   return {
-    system: new THREE.Points(geometry, material),
+    system: new Points(geometry, material),
     velocities,
     count,
     geometry,
@@ -423,100 +456,100 @@ export default function Mainframe3DBackground({
     createdTextures.push(emberTex, chadTex);
 
     // 1. Scene with subtle deep atmospheric fog
-    const scene = new THREE.Scene();
+    const scene = new Scene();
     sceneRef.current = scene;
-    scene.fog = new THREE.FogExp2(0x030305, 0.08);
+    scene.fog = new FogExp2(0x030305, 0.08);
 
     // 2. Camera: slightly raised perspective viewing the mainframe
-    const camera = new THREE.PerspectiveCamera(40, width / height, 0.1, 100);
+    const camera = new PerspectiveCamera(40, width / height, 0.1, 100);
     camera.position.set(0, 0.15, 5.8);
     cameraRef.current = camera;
 
     // 3. Renderer with antialiasing & shadow support
-    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: 'high-performance' });
+    const renderer = new WebGLRenderer({ antialias: true, alpha: true, powerPreference: 'high-performance' });
     renderer.setSize(width, height);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, profile.pixelRatio));
     renderer.shadowMap.enabled = true;
-    renderer.shadowMap.type = THREE.PCFShadowMap;
+    renderer.shadowMap.type = PCFShadowMap;
     rendererRef.current = renderer;
 
     containerRef.current.replaceChildren(renderer.domElement);
 
     // 4. Lights: Front Key Light, Spirit Aura, Back Rim Light, Interior Vacuum Glow
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.95);
+    const ambientLight = new AmbientLight(0xffffff, 0.95);
     scene.add(ambientLight);
 
-    const spiritColor = new THREE.Color(spirit.accentColor || '#f59e0b');
+    const spiritColor = new Color(spirit.accentColor || '#f59e0b');
 
     // Key spotlight from front-top
-    const spotLight = new THREE.SpotLight(0xfff5e8, 3.6, 16, Math.PI / 3.8, 0.45, 1);
+    const spotLight = new SpotLight(0xfff5e8, 3.6, 16, Math.PI / 3.8, 0.45, 1);
     spotLight.position.set(0, 5.0, 4.5);
     spotLight.castShadow = true;
     scene.add(spotLight);
 
     // Dynamic spirit neon aura rim light on left
-    const auraLight = new THREE.PointLight(spiritColor, 3.4, 10);
+    const auraLight = new PointLight(spiritColor, 3.4, 10);
     auraLight.position.set(-2.8, 2.2, 2.0);
     scene.add(auraLight);
 
     // Right cool fill light
-    const fillLight = new THREE.PointLight(0x38bdf8, 2.0, 9);
+    const fillLight = new PointLight(0x38bdf8, 2.0, 9);
     fillLight.position.set(2.8, 1.6, 2.0);
     scene.add(fillLight);
 
     // Rear rim light so the cabinet is illuminated and crisp when rotating around
-    const rearRimLight = new THREE.DirectionalLight(0x818cf8, 1.4);
+    const rearRimLight = new DirectionalLight(0x818cf8, 1.4);
     rearRimLight.position.set(1.5, 3.0, -4.5);
     scene.add(rearRimLight);
 
     // 5. Mainframe Geometry (IBM 2401 Tape Unit on IBM System/360)
-    const mainframeGroup = new THREE.Group();
+    const mainframeGroup = new Group();
     // Offset slightly down when messages are present to give room to chat column
     mainframeGroup.position.set(0, hasMessages ? -0.28 : 0, -0.6);
     scene.add(mainframeGroup);
     mainframeGroupRef.current = mainframeGroup;
 
     // Cabinet Main Body: Charcoal IBM Steel
-    const cabinetGeo = new THREE.BoxGeometry(2.36, 4.2, 1.38);
-    const cabinetMat = new THREE.MeshStandardMaterial({
+    const cabinetGeo = new BoxGeometry(2.36, 4.2, 1.38);
+    const cabinetMat = new MeshStandardMaterial({
       color: 0x131720,
       roughness: 0.32,
       metalness: 0.65
     });
-    const cabinet = new THREE.Mesh(cabinetGeo, cabinetMat);
+    const cabinet = new Mesh(cabinetGeo, cabinetMat);
     cabinet.castShadow = true;
     cabinet.receiveShadow = true;
     mainframeGroup.add(cabinet);
 
     // Front Brushed Steel Inset Panel
-    const panelGeo = new THREE.BoxGeometry(2.2, 4.02, 0.04);
-    const panelMat = new THREE.MeshStandardMaterial({
+    const panelGeo = new BoxGeometry(2.2, 4.02, 0.04);
+    const panelMat = new MeshStandardMaterial({
       color: 0x1d222b,
       roughness: 0.22,
       metalness: 0.85
     });
-    const panel = new THREE.Mesh(panelGeo, panelMat);
+    const panel = new Mesh(panelGeo, panelMat);
     panel.position.set(0, 0, 0.70);
     mainframeGroup.add(panel);
 
     // ─────────────────────────────────────────────────────────
     // TOP GLORIFIED IBM HEADER PLAQUE (Authentic 8-Bar IBM Logo)
     // ─────────────────────────────────────────────────────────
-    const headerBoxGeo = new THREE.BoxGeometry(2.14, 0.28, 0.03);
-    const headerBoxMat = new THREE.MeshStandardMaterial({
+    const headerBoxGeo = new BoxGeometry(2.14, 0.28, 0.03);
+    const headerBoxMat = new MeshStandardMaterial({
       color: 0x07111c,
       roughness: 0.3,
       metalness: 0.8
     });
-    const headerBox = new THREE.Mesh(headerBoxGeo, headerBoxMat);
+    const headerBox = new Mesh(headerBoxGeo, headerBoxMat);
     headerBox.position.set(0, 1.84, 0.73);
     mainframeGroup.add(headerBox);
 
     const ibmHeaderTex = createIBMHeaderTexture();
     createdTextures.push(ibmHeaderTex);
 
-    const headerDecalGeo = new THREE.PlaneGeometry(2.12, 0.26);
-    const headerDecalMat = new THREE.MeshStandardMaterial({
+    const headerDecalGeo = new PlaneGeometry(2.12, 0.26);
+    const headerDecalMat = new MeshStandardMaterial({
       map: ibmHeaderTex,
       emissiveMap: ibmHeaderTex,
       emissive: 0x93c5fd,
@@ -524,7 +557,7 @@ export default function Mainframe3DBackground({
       roughness: 0.15,
       metalness: 0.6
     });
-    const headerDecal = new THREE.Mesh(headerDecalGeo, headerDecalMat);
+    const headerDecal = new Mesh(headerDecalGeo, headerDecalMat);
     headerDecal.position.set(0, 0, 0.016);
     headerBox.add(headerDecal);
     createdGeometries.push(headerBoxGeo, headerDecalGeo, cabinetGeo, panelGeo);
@@ -536,18 +569,18 @@ export default function Mainframe3DBackground({
     createdTextures.push(hubTexture);
 
     const createReel = (isLeft) => {
-      const reelGroup = new THREE.Group();
+      const reelGroup = new Group();
 
       // Outer polished chrome flange
-      const flangeGeo = new THREE.CylinderGeometry(0.55, 0.55, 0.025, 36);
-      const flangeMat = new THREE.MeshStandardMaterial({
+      const flangeGeo = new CylinderGeometry(0.55, 0.55, 0.025, 36);
+      const flangeMat = new MeshStandardMaterial({
         color: 0xf1f5f9,
         roughness: 0.12,
         metalness: 0.96,
         transparent: true,
         opacity: 0.92
       });
-      const frontFlange = new THREE.Mesh(flangeGeo, flangeMat);
+      const frontFlange = new Mesh(flangeGeo, flangeMat);
       frontFlange.rotation.x = Math.PI / 2;
       reelGroup.add(frontFlange);
 
@@ -557,37 +590,37 @@ export default function Mainframe3DBackground({
       reelGroup.add(backFlange);
 
       // Center High-Torque Hub
-      const hubGeo = new THREE.CylinderGeometry(0.20, 0.20, 0.07, 32);
-      const hubMat = new THREE.MeshStandardMaterial({
+      const hubGeo = new CylinderGeometry(0.20, 0.20, 0.07, 32);
+      const hubMat = new MeshStandardMaterial({
         color: 0x1e2430,
         roughness: 0.35,
         metalness: 0.9
       });
-      const hub = new THREE.Mesh(hubGeo, hubMat);
+      const hub = new Mesh(hubGeo, hubMat);
       hub.rotation.x = Math.PI / 2;
       hub.position.z = -0.028;
       reelGroup.add(hub);
 
       // Glorified IBM Hubcap Emblem
-      const hubcapGeo = new THREE.CircleGeometry(0.18, 32);
-      const hubcapMat = new THREE.MeshStandardMaterial({
+      const hubcapGeo = new CircleGeometry(0.18, 32);
+      const hubcapMat = new MeshStandardMaterial({
         map: hubTexture,
         roughness: 0.2,
         metalness: 0.85
       });
-      const hubcap = new THREE.Mesh(hubcapGeo, hubcapMat);
+      const hubcap = new Mesh(hubcapGeo, hubcapMat);
       hubcap.position.set(0, 0, 0.012);
       reelGroup.add(hubcap);
 
       // Tape Pack cylinder (ferric oxide dark brown)
       const radius = isLeft ? 0.47 : 0.34;
-      const tapePackGeo = new THREE.CylinderGeometry(radius, radius, 0.05, 36);
-      const tapePackMat = new THREE.MeshStandardMaterial({
+      const tapePackGeo = new CylinderGeometry(radius, radius, 0.05, 36);
+      const tapePackMat = new MeshStandardMaterial({
         color: 0x472718,
         roughness: 0.75,
         metalness: 0.15
       });
-      const tapePack = new THREE.Mesh(tapePackGeo, tapePackMat);
+      const tapePack = new Mesh(tapePackGeo, tapePackMat);
       tapePack.rotation.x = Math.PI / 2;
       tapePack.position.z = -0.028;
       reelGroup.add(tapePack);
@@ -597,34 +630,34 @@ export default function Mainframe3DBackground({
         const angle = (i * Math.PI * 2) / 3;
 
         // Radial Spoke Bar
-        const spokeGeo = new THREE.BoxGeometry(0.075, 0.28, 0.025);
-        const spokeMat = new THREE.MeshStandardMaterial({
+        const spokeGeo = new BoxGeometry(0.075, 0.28, 0.025);
+        const spokeMat = new MeshStandardMaterial({
           color: 0x222630,
           roughness: 0.3,
           metalness: 0.9
         });
-        const spoke = new THREE.Mesh(spokeGeo, spokeMat);
+        const spoke = new Mesh(spokeGeo, spokeMat);
         spoke.position.set(Math.cos(angle) * 0.22, Math.sin(angle) * 0.22, 0.016);
         spoke.rotation.z = angle;
         reelGroup.add(spoke);
 
         // High-Contrast Bright White/Silver Indicator Marker (spins with high visibility)
-        const indicatorGeo = new THREE.SphereGeometry(0.038, 12, 12);
-        const indicatorMat = new THREE.MeshStandardMaterial({
+        const indicatorGeo = new SphereGeometry(0.038, 12, 12);
+        const indicatorMat = new MeshStandardMaterial({
           color: 0xffffff,
           emissive: 0xcccccc,
           emissiveIntensity: 0.4,
           roughness: 0.1,
           metalness: 0.9
         });
-        const indicator = new THREE.Mesh(indicatorGeo, indicatorMat);
+        const indicator = new Mesh(indicatorGeo, indicatorMat);
         indicator.position.set(Math.cos(angle) * 0.42, Math.sin(angle) * 0.42, 0.02);
         reelGroup.add(indicator);
 
         // Inner contrasting dot near hub
-        const innerDotGeo = new THREE.SphereGeometry(0.024, 10, 10);
-        const innerDotMat = new THREE.MeshBasicMaterial({ color: spiritColor });
-        const innerDot = new THREE.Mesh(innerDotGeo, innerDotMat);
+        const innerDotGeo = new SphereGeometry(0.024, 10, 10);
+        const innerDotMat = new MeshBasicMaterial({ color: spiritColor });
+        const innerDot = new Mesh(innerDotGeo, innerDotMat);
         innerDot.position.set(Math.cos(angle) * 0.13, Math.sin(angle) * 0.13, 0.02);
         reelGroup.add(innerDot);
       }
@@ -643,9 +676,9 @@ export default function Mainframe3DBackground({
     rightReelRef.current = rightReel;
 
     // Magnetic read/write head assembly between reels
-    const headGeo = new THREE.BoxGeometry(0.35, 0.22, 0.09);
-    const headMat = new THREE.MeshStandardMaterial({ color: 0x242832, metalness: 0.9, roughness: 0.25 });
-    const head = new THREE.Mesh(headGeo, headMat);
+    const headGeo = new BoxGeometry(0.35, 0.22, 0.09);
+    const headMat = new MeshStandardMaterial({ color: 0x242832, metalness: 0.9, roughness: 0.25 });
+    const head = new Mesh(headGeo, headMat);
     head.position.set(0, 0.82, 0.75);
     mainframeGroup.add(head);
 
@@ -653,8 +686,8 @@ export default function Mainframe3DBackground({
     const headBadgeTex = createHeadBadgeTexture();
     createdTextures.push(headBadgeTex);
 
-    const headBadgeGeo = new THREE.PlaneGeometry(0.32, 0.08);
-    const headBadgeMat = new THREE.MeshStandardMaterial({
+    const headBadgeGeo = new PlaneGeometry(0.32, 0.08);
+    const headBadgeMat = new MeshStandardMaterial({
       map: headBadgeTex,
       emissiveMap: headBadgeTex,
       emissive: 0xffffff,
@@ -662,60 +695,60 @@ export default function Mainframe3DBackground({
       roughness: 0.25,
       metalness: 0.8
     });
-    const headBadge = new THREE.Mesh(headBadgeGeo, headBadgeMat);
+    const headBadge = new Mesh(headBadgeGeo, headBadgeMat);
     headBadge.position.set(0, 0.035, 0.046);
     head.add(headBadge);
 
     // Glowing head gap indicator in spirit accent color
-    const gapGeo = new THREE.BoxGeometry(0.02, 0.12, 0.10);
-    const gapMat = new THREE.MeshBasicMaterial({ color: spiritColor });
-    const gap = new THREE.Mesh(gapGeo, gapMat);
+    const gapGeo = new BoxGeometry(0.02, 0.12, 0.10);
+    const gapMat = new MeshBasicMaterial({ color: spiritColor });
+    const gap = new Mesh(gapGeo, gapMat);
     gap.position.set(0, 0.82, 0.76);
     mainframeGroup.add(gap);
     createdGeometries.push(gapGeo);
     createdMaterials.push(gapMat);
 
     // 7. Vacuum Column Buffer Chambers
-    const colFrameGeo = new THREE.BoxGeometry(0.82, 1.42, 0.15);
-    const colFrameMat = new THREE.MeshStandardMaterial({ color: 0x0a121a, roughness: 0.3, metalness: 0.8 });
+    const colFrameGeo = new BoxGeometry(0.82, 1.42, 0.15);
+    const colFrameMat = new MeshStandardMaterial({ color: 0x0a121a, roughness: 0.3, metalness: 0.8 });
 
-    const leftCol = new THREE.Mesh(colFrameGeo, colFrameMat);
+    const leftCol = new Mesh(colFrameGeo, colFrameMat);
     leftCol.position.set(-0.54, -0.16, 0.74);
     mainframeGroup.add(leftCol);
 
-    const rightCol = new THREE.Mesh(colFrameGeo, colFrameMat);
+    const rightCol = new Mesh(colFrameGeo, colFrameMat);
     rightCol.position.set(0.54, -0.16, 0.74);
     mainframeGroup.add(rightCol);
 
     // Blue-tinted acrylic inspection glass
-    const glassGeo = new THREE.BoxGeometry(0.74, 1.32, 0.02);
-    const glassMat = new THREE.MeshPhysicalMaterial({
+    const glassGeo = new BoxGeometry(0.74, 1.32, 0.02);
+    const glassMat = new MeshPhysicalMaterial({
       color: 0x3b82f6,
       transparent: true,
       opacity: 0.32,
       roughness: 0.1,
       transmission: 0.85
     });
-    const leftGlass = new THREE.Mesh(glassGeo, glassMat);
+    const leftGlass = new Mesh(glassGeo, glassMat);
     leftGlass.position.set(-0.54, -0.16, 0.82);
     mainframeGroup.add(leftGlass);
 
-    const rightGlass = new THREE.Mesh(glassGeo, glassMat);
+    const rightGlass = new Mesh(glassGeo, glassMat);
     rightGlass.position.set(0.54, -0.16, 0.82);
     mainframeGroup.add(rightGlass);
 
     // Vacuum tape loops
     const createLoop = () => {
-      const curve = new THREE.CatmullRomCurve3([
-        new THREE.Vector3(-0.17, 0.48, 0),
-        new THREE.Vector3(-0.15, 0.0, 0),
-        new THREE.Vector3(0, -0.42, 0),
-        new THREE.Vector3(0.15, 0.0, 0),
-        new THREE.Vector3(0.17, 0.48, 0)
+      const curve = new CatmullRomCurve3([
+        new Vector3(-0.17, 0.48, 0),
+        new Vector3(-0.15, 0.0, 0),
+        new Vector3(0, -0.42, 0),
+        new Vector3(0.15, 0.0, 0),
+        new Vector3(0.17, 0.48, 0)
       ]);
-      const tubeGeo = new THREE.TubeGeometry(curve, 18, 0.019, 6, false);
-      const tubeMat = new THREE.MeshStandardMaterial({ color: 0x472718, roughness: 0.6 });
-      return new THREE.Mesh(tubeGeo, tubeMat);
+      const tubeGeo = new TubeGeometry(curve, 18, 0.019, 6, false);
+      const tubeMat = new MeshStandardMaterial({ color: 0x472718, roughness: 0.6 });
+      return new Mesh(tubeGeo, tubeMat);
     };
 
     const leftLoop = createLoop();
@@ -731,9 +764,9 @@ export default function Mainframe3DBackground({
     // ─────────────────────────────────────────────────────────
     // 8. Console Display Panel & Vintage Brass IBM Plaque
     // ─────────────────────────────────────────────────────────
-    const consoleGeo = new THREE.BoxGeometry(2.05, 0.82, 0.16);
-    const consoleMat = new THREE.MeshStandardMaterial({ color: 0x1f242d, roughness: 0.4, metalness: 0.6 });
-    const consoleBox = new THREE.Mesh(consoleGeo, consoleMat);
+    const consoleGeo = new BoxGeometry(2.05, 0.82, 0.16);
+    const consoleMat = new MeshStandardMaterial({ color: 0x1f242d, roughness: 0.4, metalness: 0.6 });
+    const consoleBox = new Mesh(consoleGeo, consoleMat);
     consoleBox.position.set(0, -1.34, 0.75);
     mainframeGroup.add(consoleBox);
 
@@ -741,8 +774,8 @@ export default function Mainframe3DBackground({
     const consoleBadgeTex = createConsoleBadgeTexture();
     createdTextures.push(consoleBadgeTex);
 
-    const consoleBadgeGeo = new THREE.PlaneGeometry(1.92, 0.14);
-    const consoleBadgeMat = new THREE.MeshStandardMaterial({
+    const consoleBadgeGeo = new PlaneGeometry(1.92, 0.14);
+    const consoleBadgeMat = new MeshStandardMaterial({
       map: consoleBadgeTex,
       emissiveMap: consoleBadgeTex,
       emissive: 0xfef08a,
@@ -750,7 +783,7 @@ export default function Mainframe3DBackground({
       roughness: 0.3,
       metalness: 0.8
     });
-    const consoleBadge = new THREE.Mesh(consoleBadgeGeo, consoleBadgeMat);
+    const consoleBadge = new Mesh(consoleBadgeGeo, consoleBadgeMat);
     consoleBadge.position.set(0, 0.28, 0.082);
     consoleBox.add(consoleBadge);
 
@@ -762,15 +795,15 @@ export default function Mainframe3DBackground({
 
     for (let r = 0; r < lightRows; r++) {
       for (let c = 0; c < lightCols; c++) {
-        const lampGeo = new THREE.SphereGeometry(0.022, 10, 10);
+        const lampGeo = new SphereGeometry(0.022, 10, 10);
         const isAmber = c % 4 < 2;
-        const lampMat = new THREE.MeshStandardMaterial({
+        const lampMat = new MeshStandardMaterial({
           color: isAmber ? 0xf59e0b : 0xef4444,
           emissive: isAmber ? 0xf59e0b : 0xef4444,
           emissiveIntensity: Math.random() > 0.5 ? 1.6 : 0.08,
           roughness: 0.2
         });
-        const lamp = new THREE.Mesh(lampGeo, lampMat);
+        const lamp = new Mesh(lampGeo, lampMat);
         lamp.position.set(
           -0.92 + c * spacingX,
           -1.28 - r * 0.16,
@@ -785,23 +818,23 @@ export default function Mainframe3DBackground({
     // ─────────────────────────────────────────────────────────
     // 9. REAR CABINET DETAILS & STAMPED IBM SPECIFICATION PLATE
     // ─────────────────────────────────────────────────────────
-    const rearPanelGeo = new THREE.BoxGeometry(2.2, 4.02, 0.04);
-    const rearPanelMat = new THREE.MeshStandardMaterial({ color: 0x181c24, roughness: 0.4, metalness: 0.7 });
-    const rearPanel = new THREE.Mesh(rearPanelGeo, rearPanelMat);
+    const rearPanelGeo = new BoxGeometry(2.2, 4.02, 0.04);
+    const rearPanelMat = new MeshStandardMaterial({ color: 0x181c24, roughness: 0.4, metalness: 0.7 });
+    const rearPanel = new Mesh(rearPanelGeo, rearPanelMat);
     rearPanel.position.set(0, 0, -0.70);
     mainframeGroup.add(rearPanel);
 
     // Rear Cooling Ventilation Louvers
     for (let l = 0; l < 7; l++) {
-      const louverGeo = new THREE.BoxGeometry(1.8, 0.08, 0.03);
-      const louverMat = new THREE.MeshStandardMaterial({ color: 0x0f131a, roughness: 0.5, metalness: 0.8 });
-      const louver = new THREE.Mesh(louverGeo, louverMat);
+      const louverGeo = new BoxGeometry(1.8, 0.08, 0.03);
+      const louverMat = new MeshStandardMaterial({ color: 0x0f131a, roughness: 0.5, metalness: 0.8 });
+      const louver = new Mesh(louverGeo, louverMat);
       louver.position.set(0, 0.8 - l * 0.26, -0.72);
       mainframeGroup.add(louver);
     }
 
     // Warm Vacuum Tube Internal Glow shining through back vents
-    const tubeGlowLight = new THREE.PointLight(0xff6a00, 2.8, 3.8);
+    const tubeGlowLight = new PointLight(0xff6a00, 2.8, 3.8);
     tubeGlowLight.position.set(0, 0, -0.65);
     mainframeGroup.add(tubeGlowLight);
 
@@ -809,45 +842,45 @@ export default function Mainframe3DBackground({
     const specPlateTex = createSpecPlateTexture();
     createdTextures.push(specPlateTex);
 
-    const specPlateGeo = new THREE.BoxGeometry(0.82, 0.42, 0.02);
-    const specPlateMat = new THREE.MeshStandardMaterial({ color: 0x1e2430, metalness: 0.85, roughness: 0.3 });
-    const specPlateBox = new THREE.Mesh(specPlateGeo, specPlateMat);
+    const specPlateGeo = new BoxGeometry(0.82, 0.42, 0.02);
+    const specPlateMat = new MeshStandardMaterial({ color: 0x1e2430, metalness: 0.85, roughness: 0.3 });
+    const specPlateBox = new Mesh(specPlateGeo, specPlateMat);
     specPlateBox.position.set(0, -1.2, -0.72);
     mainframeGroup.add(specPlateBox);
 
-    const specPlateDecalGeo = new THREE.PlaneGeometry(0.80, 0.40);
-    const specPlateDecalMat = new THREE.MeshStandardMaterial({
+    const specPlateDecalGeo = new PlaneGeometry(0.80, 0.40);
+    const specPlateDecalMat = new MeshStandardMaterial({
       map: specPlateTex,
       roughness: 0.25,
       metalness: 0.75
     });
-    const specPlateDecal = new THREE.Mesh(specPlateDecalGeo, specPlateDecalMat);
+    const specPlateDecal = new Mesh(specPlateDecalGeo, specPlateDecalMat);
     specPlateDecal.rotation.y = Math.PI; // Face outwards toward the rear
     specPlateDecal.position.set(0, 0, -0.012);
     specPlateBox.add(specPlateDecal);
 
     // Heavy Mainframe Floor Cables exiting rear base
-    const cableMat = new THREE.MeshStandardMaterial({ color: 0x111317, roughness: 0.7, metalness: 0.2 });
+    const cableMat = new MeshStandardMaterial({ color: 0x111317, roughness: 0.7, metalness: 0.2 });
     for (let c = 0; c < 3; c++) {
-      const cableCurve = new THREE.CatmullRomCurve3([
-        new THREE.Vector3(-0.4 + c * 0.4, -2.0, -0.65),
-        new THREE.Vector3(-0.5 + c * 0.5, -2.4, -1.1),
-        new THREE.Vector3(-0.6 + c * 0.6, -2.6, -1.8)
+      const cableCurve = new CatmullRomCurve3([
+        new Vector3(-0.4 + c * 0.4, -2.0, -0.65),
+        new Vector3(-0.5 + c * 0.5, -2.4, -1.1),
+        new Vector3(-0.6 + c * 0.6, -2.6, -1.8)
       ]);
-      const cableGeo = new THREE.TubeGeometry(cableCurve, 14, 0.045, 8, false);
-      const cableMesh = new THREE.Mesh(cableGeo, cableMat);
+      const cableGeo = new TubeGeometry(cableCurve, 14, 0.045, 8, false);
+      const cableMesh = new Mesh(cableGeo, cableMat);
       mainframeGroup.add(cableMesh);
     }
 
     // 10. SIDE SERVICE PANELS & HANDLES
-    const handleGeo = new THREE.CylinderGeometry(0.018, 0.018, 0.28, 12);
-    const handleMat = new THREE.MeshStandardMaterial({ color: 0x94a3b8, metalness: 0.9, roughness: 0.2 });
+    const handleGeo = new CylinderGeometry(0.018, 0.018, 0.28, 12);
+    const handleMat = new MeshStandardMaterial({ color: 0x94a3b8, metalness: 0.9, roughness: 0.2 });
 
-    const leftHandle = new THREE.Mesh(handleGeo, handleMat);
+    const leftHandle = new Mesh(handleGeo, handleMat);
     leftHandle.position.set(-1.19, 0, 0);
     mainframeGroup.add(leftHandle);
 
-    const rightHandle = new THREE.Mesh(handleGeo, handleMat);
+    const rightHandle = new Mesh(handleGeo, handleMat);
     rightHandle.position.set(1.19, 0, 0);
     mainframeGroup.add(rightHandle);
 
@@ -879,12 +912,12 @@ export default function Mainframe3DBackground({
       map: chadTex,
       opacity: 0.55
     });
-    chads.material.blending = THREE.NormalBlending;
+    chads.material.blending = NormalBlending;
     scene.add(chads.system);
     createdGeometries.push(chads.geometry);
     createdMaterials.push(chads.material);
 
-    const grid = new THREE.GridHelper(22, 44, 0x1d4ed8, 0x111827);
+    const grid = new GridHelper(22, 44, 0x1d4ed8, 0x111827);
     grid.position.y = -2.78;
     const gridMats = Array.isArray(grid.material) ? grid.material : [grid.material];
     gridMats.forEach((mat) => {
@@ -893,21 +926,21 @@ export default function Mainframe3DBackground({
     });
     scene.add(grid);
 
-    const ringGeo = new THREE.TorusGeometry(2.05, 0.012, 8, 72);
-    const ringMatA = new THREE.MeshBasicMaterial({
+    const ringGeo = new TorusGeometry(2.05, 0.012, 8, 72);
+    const ringMatA = new MeshBasicMaterial({
       color: spiritColor,
       transparent: true,
       opacity: 0.38
     });
-    const ringMatB = new THREE.MeshBasicMaterial({
+    const ringMatB = new MeshBasicMaterial({
       color: 0x38bdf8,
       transparent: true,
       opacity: 0.22
     });
-    const ringA = new THREE.Mesh(ringGeo, ringMatA);
+    const ringA = new Mesh(ringGeo, ringMatA);
     ringA.rotation.x = Math.PI / 2;
     ringA.position.y = -1.15;
-    const ringB = new THREE.Mesh(ringGeo, ringMatB);
+    const ringB = new Mesh(ringGeo, ringMatB);
     ringB.rotation.x = Math.PI / 2.15;
     ringB.position.y = 1.55;
     scene.add(ringA, ringB);
@@ -915,8 +948,8 @@ export default function Mainframe3DBackground({
     createdMaterials.push(ringMatA, ringMatB);
 
     const orbCount = profile.reduced ? 2 : profile.quality === 'low' ? 3 : 5;
-    const orbGeo = new THREE.SphereGeometry(0.045, 12, 12);
-    const orbMat = new THREE.MeshBasicMaterial({
+    const orbGeo = new SphereGeometry(0.045, 12, 12);
+    const orbMat = new MeshBasicMaterial({
       color: spiritColor,
       transparent: true,
       opacity: 0.9
@@ -925,7 +958,7 @@ export default function Mainframe3DBackground({
     createdMaterials.push(orbMat);
     const orbs = [];
     for (let i = 0; i < orbCount; i++) {
-      const mesh = new THREE.Mesh(orbGeo, orbMat);
+      const mesh = new Mesh(orbGeo, orbMat);
       scene.add(mesh);
       orbs.push({
         mesh,
@@ -936,13 +969,13 @@ export default function Mainframe3DBackground({
       });
     }
 
-    const scanBarGeo = new THREE.BoxGeometry(2.08, 0.035, 0.02);
-    const scanBarMat = new THREE.MeshBasicMaterial({
+    const scanBarGeo = new BoxGeometry(2.08, 0.035, 0.02);
+    const scanBarMat = new MeshBasicMaterial({
       color: spiritColor,
       transparent: true,
       opacity: 0.55
     });
-    const scanBar = new THREE.Mesh(scanBarGeo, scanBarMat);
+    const scanBar = new Mesh(scanBarGeo, scanBarMat);
     scanBar.position.set(0, 0.4, 0.735);
     mainframeGroup.add(scanBar);
     createdGeometries.push(scanBarGeo);

@@ -1,5 +1,23 @@
 import React, { useRef, useEffect, useState } from 'react';
-import * as THREE from 'three';
+import {
+  AmbientLight,
+  BoxGeometry,
+  CanvasTexture,
+  Clock,
+  Color,
+  CylinderGeometry,
+  DirectionalLight,
+  ExtrudeGeometry,
+  Group,
+  Mesh,
+  MeshBasicMaterial,
+  MeshStandardMaterial,
+  PCFSoftShadowMap,
+  PerspectiveCamera,
+  Scene,
+  Shape,
+  WebGLRenderer
+} from 'three';
 import { RotateCw, Play, Sparkles, Eye, RefreshCw, ZoomIn, ZoomOut } from 'lucide-react';
 import { seanceAudio } from '../audio/seanceAudio';
 
@@ -139,7 +157,7 @@ export default function Punchcard3D({
       }
     }
 
-    const texture = new THREE.CanvasTexture(canvas);
+    const texture = new CanvasTexture(canvas);
     texture.anisotropy = 8;
     return texture;
   };
@@ -174,7 +192,7 @@ export default function Punchcard3D({
     ctx.fillText('HOLLERITH 80-COLUMN CARD', 0, 45);
     ctx.restore();
 
-    return new THREE.CanvasTexture(canvas);
+    return new CanvasTexture(canvas);
   };
 
   // Setup Three.js 3D Scene
@@ -184,42 +202,42 @@ export default function Punchcard3D({
     const height = 480;
 
     // Scene
-    const scene = new THREE.Scene();
+    const scene = new Scene();
     sceneRef.current = scene;
 
     // Camera
-    const camera = new THREE.PerspectiveCamera(40, width / height, 0.1, 100);
+    const camera = new PerspectiveCamera(40, width / height, 0.1, 100);
     camera.position.set(0, 0, 6.2);
     cameraRef.current = camera;
 
     // Renderer
-    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    const renderer = new WebGLRenderer({ antialias: true, alpha: true });
     renderer.setSize(width, height);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.shadowMap.enabled = true;
-    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    renderer.shadowMap.type = PCFSoftShadowMap;
     rendererRef.current = renderer;
 
     containerRef.current.replaceChildren(renderer.domElement);
 
     // Ambient light
-    const ambientLight = new THREE.AmbientLight(0xffffff, 1.2);
+    const ambientLight = new AmbientLight(0xffffff, 1.2);
     scene.add(ambientLight);
 
     // Ethereal colored rim light matching spirit
-    const rimColor = new THREE.Color(spiritAccentColor || '#f59e0b');
-    const rimLight = new THREE.DirectionalLight(rimColor, 1.5);
+    const rimColor = new Color(spiritAccentColor || '#f59e0b');
+    const rimLight = new DirectionalLight(rimColor, 1.5);
     rimLight.position.set(-5, 4, -3);
     scene.add(rimLight);
 
     // Key directional light tracking card
-    const keyLight = new THREE.DirectionalLight(0xfff6e6, 2.0);
+    const keyLight = new DirectionalLight(0xfff6e6, 2.0);
     keyLight.position.set(4, 5, 6);
     keyLight.castShadow = true;
     scene.add(keyLight);
 
     // Card Group
-    const cardGroup = new THREE.Group();
+    const cardGroup = new Group();
     cardGroupRef.current = cardGroup;
     scene.add(cardGroup);
 
@@ -229,7 +247,7 @@ export default function Punchcard3D({
     const cardHeight = 1.95;
     const cornerCutSize = 0.22;
 
-    const shape = new THREE.Shape();
+    const shape = new Shape();
     // Top-left cut corner
     shape.moveTo(-cardWidth / 2 + cornerCutSize, cardHeight / 2);
     shape.lineTo(cardWidth / 2, cardHeight / 2);
@@ -247,73 +265,73 @@ export default function Punchcard3D({
       bevelThickness: 0.005
     };
 
-    const geometry = new THREE.ExtrudeGeometry(shape, extrudeSettings);
+    const geometry = new ExtrudeGeometry(shape, extrudeSettings);
     geometry.center();
 
     const frontTexture = createCardTexture();
     const backTexture = createBackTexture();
 
-    const frontMaterial = new THREE.MeshStandardMaterial({
+    const frontMaterial = new MeshStandardMaterial({
       map: frontTexture,
       roughness: 0.65,
       metalness: 0.05
     });
 
-    const backMaterial = new THREE.MeshStandardMaterial({
+    const backMaterial = new MeshStandardMaterial({
       map: backTexture,
       roughness: 0.7,
       metalness: 0.02
     });
 
-    const edgeMaterial = new THREE.MeshStandardMaterial({
+    const edgeMaterial = new MeshStandardMaterial({
       color: 0xe0d4b8,
       roughness: 0.9
     });
 
     // Materials array: 0 = sides/edges, 1 = front, 2 = back
     const materials = [frontMaterial, edgeMaterial];
-    const cardMesh = new THREE.Mesh(geometry, materials);
+    const cardMesh = new Mesh(geometry, materials);
     cardMesh.castShadow = true;
     cardMesh.receiveShadow = true;
     cardGroup.add(cardMesh);
 
     // 3. Reader Tray Base (IBM 2540 Card Hopper surface below card)
-    const trayGeo = new THREE.BoxGeometry(5.2, 0.12, 3.2);
-    const trayMat = new THREE.MeshStandardMaterial({
+    const trayGeo = new BoxGeometry(5.2, 0.12, 3.2);
+    const trayMat = new MeshStandardMaterial({
       color: 0x1f1f1f,
       roughness: 0.4,
       metalness: 0.7
     });
-    const trayMesh = new THREE.Mesh(trayGeo, trayMat);
+    const trayMesh = new Mesh(trayGeo, trayMat);
     trayMesh.position.set(0, -1.35, -0.4);
     trayMesh.receiveShadow = true;
     scene.add(trayMesh);
 
     // Brushed metal trim on card hopper
-    const trimGeo = new THREE.BoxGeometry(5.2, 0.03, 0.05);
-    const trimMat = new THREE.MeshStandardMaterial({
+    const trimGeo = new BoxGeometry(5.2, 0.03, 0.05);
+    const trimMat = new MeshStandardMaterial({
       color: 0x888888,
       roughness: 0.2,
       metalness: 0.9
     });
-    const trimMesh = new THREE.Mesh(trimGeo, trimMat);
+    const trimMesh = new Mesh(trimGeo, trimMat);
     trimMesh.position.set(0, -1.28, 1.15);
     scene.add(trimMesh);
 
     // 4. Holographic Laser Scan Line
-    const scanGeo = new THREE.CylinderGeometry(0.015, 0.015, cardHeight * 1.05, 16);
-    const scanMat = new THREE.MeshBasicMaterial({
+    const scanGeo = new CylinderGeometry(0.015, 0.015, cardHeight * 1.05, 16);
+    const scanMat = new MeshBasicMaterial({
       color: rimColor,
       transparent: true,
       opacity: 0.0
     });
-    const scanLine = new THREE.Mesh(scanGeo, scanMat);
+    const scanLine = new Mesh(scanGeo, scanMat);
     scanLine.position.set(-cardWidth / 2, 0, 0.03);
     cardGroup.add(scanLine);
     scanLineRef.current = scanLine;
 
     // Render loop
-    let clock = new THREE.Clock();
+    let clock = new Clock();
 
     const animate = () => {
       animationFrameRef.current = requestAnimationFrame(animate);

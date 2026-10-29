@@ -1,7 +1,7 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback, lazy, Suspense } from 'react';
 import Sidebar from './components/Sidebar';
 import ChatArea from './components/ChatArea';
-import PunchcardVisualizer from './components/PunchcardVisualizer';
+const PunchcardVisualizer = lazy(() => import('./components/PunchcardVisualizer'));
 import LoreModal from './components/LoreModal';
 import VoiceModeModal from './components/VoiceModeModal';
 import { necromancyEngine, SPIRITS } from './engine/necromancyEngine';
@@ -641,11 +641,13 @@ export default function App() {
 
       {/* Interactive Punchcard Modal */}
       {punchcardText && (
-        <PunchcardVisualizer
-          lineText={punchcardText}
-          onClose={() => setPunchcardText(null)}
-          spiritAccentColor={SPIRITS[activeSpiritId]?.accentColor || '#f59e0b'}
-        />
+        <Suspense fallback={null}>
+          <PunchcardVisualizer
+            lineText={punchcardText}
+            onClose={() => setPunchcardText(null)}
+            spiritAccentColor={SPIRITS[activeSpiritId]?.accentColor || '#f59e0b'}
+          />
+        </Suspense>
       )}
 
       {/* The Book of Dead Languages Codex Modal */}

@@ -1,12 +1,12 @@
-import React, { useRef, useEffect, useState } from 'react';
+import React, { useRef, useEffect, useState, lazy, Suspense } from 'react';
 import { 
   Menu, SquarePen, MoreHorizontal, ChevronDown, Check, 
   Download, Trash2, Volume2, VolumeX, FileText, Cpu, BookOpen, 
   AudioWaveform, Flame, FileJson
 } from 'lucide-react';
-import MessageBubble from './MessageBubble';
+const MessageBubble = lazy(() => import('./MessageBubble'));
 import InputBar from './InputBar';
-import Mainframe3DBackground from './Mainframe3DBackground';
+const Mainframe3DBackground = lazy(() => import('./Mainframe3DBackground'));
 import { SPIRITS, getDynamicSuggestions } from '../engine/necromancyEngine';
 
 export default function ChatArea({
@@ -74,11 +74,13 @@ export default function ChatArea({
   return (
     <main className="flex-1 flex flex-col h-screen bg-[#030304] overflow-hidden relative text-[#ECECEC]">
       {/* 3D Mainframe & Séance Chamber Background (runs full-bleed in the vast background) */}
-      <Mainframe3DBackground
-        activeSpiritId={activeSpiritId}
-        isStreaming={isStreaming}
-        hasMessages={hasMessages}
-      />
+      <Suspense fallback={null}>
+        <Mainframe3DBackground
+          activeSpiritId={activeSpiritId}
+          isStreaming={isStreaming}
+          hasMessages={hasMessages}
+        />
+      </Suspense>
 
       {/* TOP BAR: persona name + model dropdown on left, subtle candle flicker, Voice Mode, single new séance button & "..." menu on right */}
       <header className="h-14 px-4 bg-transparent flex items-center justify-between shrink-0 relative z-20">
@@ -381,6 +383,7 @@ export default function ChatArea({
             onScroll={handleScroll}
             className="messages-scroll-container flex-1 overflow-y-auto px-4 py-6"
           >
+            <Suspense fallback={null}>
             <div className="max-w-[760px] mx-auto w-full space-y-6">
               {messages.map((msg, idx) => (
                 <MessageBubble
@@ -406,6 +409,7 @@ export default function ChatArea({
 
               <div ref={messagesEndRef} />
             </div>
+            </Suspense>
           </div>
 
           {/* Docked Composer at bottom */}

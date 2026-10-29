@@ -1,5 +1,8 @@
 import React, { useEffect, useRef } from 'react';
-import { Attachment01Icon, File02Icon, SparklesIcon, Book02Icon } from '@hugeicons/core-free-icons';
+import Attachment01Icon from '@hugeicons/core-free-icons/Attachment01Icon';
+import File02Icon from '@hugeicons/core-free-icons/File02Icon';
+import SparklesIcon from '@hugeicons/core-free-icons/SparklesIcon';
+import Book02Icon from '@hugeicons/core-free-icons/Book02Icon';
 import PromptBar from './PromptBar';
 import { seanceSpeech } from '../audio/seanceSpeech';
 

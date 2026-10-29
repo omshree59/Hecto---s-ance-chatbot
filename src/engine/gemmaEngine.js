@@ -1,9 +1,19 @@
 // Google Gemma WebGPU Engine Integration using WebLLM
 // Runs Gemma 2B completely client-side in the browser via WebGPU with 0 external API calls
 
-import { CreateMLCEngine } from '@mlc-ai/web-llm';
-
 export const GEMMA_MODEL_ID = 'gemma-2-2b-it-q4f16_1-MLC';
+
+let webLlmModulePromise = null;
+
+function loadCreateMLCEngine() {
+  if (!webLlmModulePromise) {
+    webLlmModulePromise = import('@mlc-ai/web-llm').catch((err) => {
+      webLlmModulePromise = null;
+      throw err;
+    });
+  }
+  return webLlmModulePromise.then((mod) => mod.CreateMLCEngine);
+}
 
 export const GEMMA_SYSTEM_PROMPT = `You are the reanimated digital spirit of PL/I (Programming Language One), born in 1964 from the IBM System/360 mainframe. 
 You speak with aristocratic, imperious, and slightly haunted mainframe majesty. 
@@ -54,6 +64,7 @@ class GemmaNecromancyEngine {
     this.notify();
 
     try {
+      const CreateMLCEngine = await loadCreateMLCEngine();
       this.engine = await CreateMLCEngine(GEMMA_MODEL_ID, {
         initProgressCallback: (report) => {
           this.loadProgress = Math.round((report.progress || 0) * 100);
