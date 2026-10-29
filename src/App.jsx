@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import Sidebar from './components/Sidebar';
 import ChatArea from './components/ChatArea';
 import PunchcardVisualizer from './components/PunchcardVisualizer';
@@ -7,46 +7,19 @@ import VoiceModeModal from './components/VoiceModeModal';
 import { necromancyEngine, SPIRITS } from './engine/necromancyEngine';
 import { gemmaEngine } from './engine/gemmaEngine';
 import { seanceAudio } from './audio/seanceAudio';
-
-const STORAGE_KEY = 'seance_sessions_v5';
-const PINNED_KEY = 'seance_pinned_v1';
+import { seanceDB } from './db/seanceDB';
 
 export default function App() {
-  // --- Persistent Sessions & Settings ---
-  const [sessions, setSessions] = useState(() => {
-    try {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      if (saved) return JSON.parse(saved);
-    } catch (e) {}
+  // --- Persistent Sessions & Settings from IndexedDB ---
+  const [sessions, setSessions] = useState([]);
+  const [activeSessionId, setActiveSessionId] = useState('');
+  const [pinnedSessionIds, setPinnedSessionIds] = useState([]);
+  const [isDBReady, setIsDBReady] = useState(false);
 
-    const initialId = 'seance-' + Date.now();
-    return [{
-      id: initialId,
-      title: 'Invocation of the IBM System/360',
-      spiritId: 'pli',
-      timestamp: new Date().toISOString(),
-      messages: [] // Empty state so "What shall we summon?" is shown!
-    }];
-  });
+  // Active persona spirit ID
+  const [activeSpiritId, setActiveSpiritId] = useState('pli');
 
-  const [pinnedSessionIds, setPinnedSessionIds] = useState(() => {
-    try {
-      const saved = localStorage.getItem(PINNED_KEY);
-      if (saved) return JSON.parse(saved);
-    } catch (e) {}
-    return [];
-  });
-
-  const [activeSessionId, setActiveSessionId] = useState(() => {
-    return sessions[0]?.id || '';
-  });
-
-  const [activeSpiritId, setActiveSpiritId] = useState(() => {
-    const active = sessions.find(s => s.id === activeSessionId);
-    return active?.spiritId || 'pli';
-  });
-
-  // AI Engine Type: 'instant' (PL/I Necromancy Engine) | 'gemma' (WebGPU Gemma 2B)
+  // AI Engine Type: 'instant' (Necromancy Spirit Engine) | 'gemma' (WebGPU Gemma 2B)
   const [activeEngineType, setActiveEngineType] = useState('instant');
   const [gemmaStatus, setGemmaStatus] = useState({
     isLoading: false,
@@ -78,6 +51,43 @@ export default function App() {
   const initialTypingDelayRef = useRef(null);
   const fullResponseRef = useRef(null);
 
+  // 1. Initialize from IndexedDB on startup
+  useEffect(() => {
+    let isMounted = true;
+    (async () => {
+      try {
+        const loadedSessions = await seanceDB.getAllSessions();
+        if (isMounted) {
+          if (loadedSessions && loadedSessions.length > 0) {
+            setSessions(loadedSessions);
+            setActiveSessionId(loadedSessions[0].id);
+            setActiveSpiritId(loadedSessions[0].spiritId || 'pli');
+            setPinnedSessionIds(loadedSessions.filter(s => s.pinned).map(s => s.id));
+          } else {
+            // Create default session
+            const initialSession = {
+              id: 'seance-' + Date.now(),
+              title: 'Invocation of the IBM System/360',
+              spiritId: 'pli',
+              pinned: false,
+              timestamp: new Date().toISOString(),
+              messages: []
+            };
+            await seanceDB.saveSession(initialSession);
+            setSessions([initialSession]);
+            setActiveSessionId(initialSession.id);
+            setActiveSpiritId('pli');
+          }
+          setIsDBReady(true);
+        }
+      } catch (e) {
+        console.error('Failed to init IndexedDB:', e);
+      }
+    })();
+
+    return () => { isMounted = false; };
+  }, []);
+
   // Subscribe to Gemma state changes
   useEffect(() => {
     const unsubscribe = gemmaEngine.subscribe(status => {
@@ -86,20 +96,7 @@ export default function App() {
     return unsubscribe;
   }, []);
 
-  // Save sessions & pinned to localStorage
-  useEffect(() => {
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(sessions));
-    } catch (e) {}
-  }, [sessions]);
-
-  useEffect(() => {
-    try {
-      localStorage.setItem(PINNED_KEY, JSON.stringify(pinnedSessionIds));
-    } catch (e) {}
-  }, [pinnedSessionIds]);
-
-  // Sync active spirit to engine
+  // Sync active spirit to necromancy engine
   useEffect(() => {
     necromancyEngine.setSpirit(activeSpiritId);
   }, [activeSpiritId]);
@@ -111,13 +108,35 @@ export default function App() {
 
   const activeSession = sessions.find(s => s.id === activeSessionId) || sessions[0];
 
+  // Helper to persist session update to state & IndexedDB
+  const updateSession = useCallback(async (sessionId, updater) => {
+    setSessions(prev => {
+      const next = prev.map(s => {
+        if (s.id === sessionId) {
+          const updated = typeof updater === 'function' ? updater(s) : { ...s, ...updater };
+          seanceDB.saveSession(updated).catch(console.error);
+          return updated;
+        }
+        return s;
+      });
+      return next;
+    });
+  }, []);
+
   // --- Handlers ---
   const handleToggleAudio = () => {
     const newState = seanceAudio.toggleAmbiance();
     setIsAudioPlaying(newState);
   };
 
-  const handleTogglePin = (sessionId) => {
+  const handleTogglePin = async (sessionId) => {
+    await seanceDB.togglePinSession(sessionId);
+    setSessions(prev => prev.map(s => {
+      if (s.id === sessionId) {
+        return { ...s, pinned: !s.pinned };
+      }
+      return s;
+    }));
     setPinnedSessionIds(prev => 
       prev.includes(sessionId) 
         ? prev.filter(id => id !== sessionId) 
@@ -125,16 +144,24 @@ export default function App() {
     );
   };
 
+  const handleRenameSession = async (sessionId, newTitle) => {
+    if (!newTitle.trim()) return;
+    await seanceDB.renameSession(sessionId, newTitle.trim());
+    setSessions(prev => prev.map(s => {
+      if (s.id === sessionId) {
+        return { ...s, title: newTitle.trim() };
+      }
+      return s;
+    }));
+  };
+
   const handleSelectSpirit = (newSpiritId) => {
     setActiveSpiritId(newSpiritId);
     necromancyEngine.setSpirit(newSpiritId);
 
-    setSessions(prev => prev.map(s => {
-      if (s.id === activeSessionId) {
-        return { ...s, spiritId: newSpiritId };
-      }
-      return s;
-    }));
+    if (activeSessionId) {
+      updateSession(activeSessionId, { spiritId: newSpiritId });
+    }
 
     seanceAudio.playChime();
   };
@@ -145,13 +172,13 @@ export default function App() {
       try {
         await gemmaEngine.initialize();
       } catch (err) {
-        alert('WebGPU Error: ' + err.message + '\nDefaulting to Instant PL/I Engine.');
+        alert('WebGPU Error: ' + err.message + '\nDefaulting to Instant Engine.');
         setActiveEngineType('instant');
       }
     }
   };
 
-  const handleNewSession = () => {
+  const handleNewSession = async () => {
     if (isStreaming) handleHastenStream();
 
     const spirit = SPIRITS[activeSpiritId] || SPIRITS.pli;
@@ -160,31 +187,39 @@ export default function App() {
       id: newSessionId,
       title: `Séance of ${spirit.name}`,
       spiritId: activeSpiritId,
+      pinned: false,
       timestamp: new Date().toISOString(),
       messages: [] // Empty state so "What shall we summon?" displays!
     };
 
+    await seanceDB.saveSession(newSession);
     setSessions(prev => [newSession, ...prev]);
     setActiveSessionId(newSessionId);
     setIsMobileMenuOpen(false);
     seanceAudio.playChime();
   };
 
-  const handleDeleteSession = (sessionId) => {
+  const handleDeleteSession = async (sessionId) => {
+    await seanceDB.deleteSession(sessionId);
     setSessions(prev => {
       const filtered = prev.filter(s => s.id !== sessionId);
       if (filtered.length === 0) {
         const fallbackId = 'seance-' + Date.now();
-        return [{
+        const fallbackSession = {
           id: fallbackId,
           title: 'Invocation of the IBM System/360',
           spiritId: 'pli',
+          pinned: false,
           timestamp: new Date().toISOString(),
           messages: []
-        }];
+        };
+        seanceDB.saveSession(fallbackSession);
+        setActiveSessionId(fallbackId);
+        return [fallbackSession];
       }
       if (activeSessionId === sessionId) {
         setActiveSessionId(filtered[0].id);
+        setActiveSpiritId(filtered[0].spiritId || 'pli');
       }
       return filtered;
     });
@@ -192,12 +227,9 @@ export default function App() {
 
   const handleClearCurrentSession = () => {
     if (isStreaming) handleHastenStream();
-    setSessions(prev => prev.map(s => {
-      if (s.id === activeSessionId) {
-        return { ...s, messages: [] };
-      }
-      return s;
-    }));
+    if (activeSessionId) {
+      updateSession(activeSessionId, { messages: [] });
+    }
   };
 
   const handleHastenStream = () => {
@@ -214,15 +246,12 @@ export default function App() {
     }
 
     const completed = fullResponseRef.current;
-    setSessions(prev => prev.map(s => {
-      if (s.id === activeSessionId) {
-        return {
-          ...s,
-          messages: [...s.messages, completed]
-        };
-      }
-      return s;
-    }));
+    if (activeSessionId) {
+      updateSession(activeSessionId, s => ({
+        ...s,
+        messages: [...s.messages, completed]
+      }));
+    }
 
     setIsStreaming(false);
     setStreamingText('');
@@ -244,18 +273,12 @@ export default function App() {
 
     const isFirst = !activeSession?.messages.some(m => m.sender === 'user');
     const updatedTitle = isFirst ? text.slice(0, 32).trim() : activeSession.title;
-    const updatedMsgs = [...activeSession.messages, userMessage];
+    const updatedMsgs = [...(activeSession?.messages || []), userMessage];
 
-    setSessions(prev => prev.map(s => {
-      if (s.id === activeSessionId) {
-        return {
-          ...s,
-          title: updatedTitle,
-          messages: updatedMsgs
-        };
-      }
-      return s;
-    }));
+    updateSession(activeSessionId, {
+      title: updatedTitle,
+      messages: updatedMsgs
+    });
 
     if (activeEngineType === 'gemma' && gemmaEngine.isReady) {
       try {
@@ -271,11 +294,9 @@ export default function App() {
           text: full,
           timestamp: new Date().toISOString()
         };
-        setSessions(prev => prev.map(s => {
-          if (s.id === activeSessionId) {
-            return { ...s, messages: [...s.messages, reply] };
-          }
-          return s;
+        updateSession(activeSessionId, s => ({
+          ...s,
+          messages: [...s.messages, reply]
         }));
         return reply;
       } catch (e) {
@@ -283,8 +304,8 @@ export default function App() {
       }
     }
 
-    // Instant Engine response
-    const payload = necromancyEngine.generateResponse(text);
+    // Instant Engine response with Persona Memory
+    const payload = necromancyEngine.generateResponse(text, updatedMsgs);
     const spiritReply = {
       id: 'spirit-' + Date.now(),
       sender: 'spirit',
@@ -295,21 +316,19 @@ export default function App() {
       timestamp: payload.timestamp
     };
 
-    setSessions(prev => prev.map(s => {
-      if (s.id === activeSessionId) {
-        return { ...s, messages: [...s.messages, spiritReply] };
-      }
-      return s;
+    updateSession(activeSessionId, s => ({
+      ...s,
+      messages: [...s.messages, spiritReply]
     }));
 
     return spiritReply;
   };
 
   // Standard chat message submission
-  const handleSendMessage = async (text, isRegenerate = false) => {
+  const handleSendMessage = async (text, isRegenerate = false, customHistory = null) => {
     if (!text.trim() || isStreaming) return;
 
-    let updatedMessages = activeSession.messages;
+    let updatedMessages = customHistory || activeSession?.messages || [];
 
     if (!isRegenerate) {
       const userMessage = {
@@ -319,23 +338,17 @@ export default function App() {
         timestamp: new Date().toISOString()
       };
 
-      const isFirstUserMessage = !activeSession?.messages.some(m => m.sender === 'user');
+      const isFirstUserMessage = !updatedMessages.some(m => m.sender === 'user');
       const updatedTitle = isFirstUserMessage
         ? text.slice(0, 32).trim() + (text.length > 32 ? '...' : '')
         : activeSession.title;
 
-      updatedMessages = [...activeSession.messages, userMessage];
+      updatedMessages = [...updatedMessages, userMessage];
 
-      setSessions(prev => prev.map(s => {
-        if (s.id === activeSessionId) {
-          return {
-            ...s,
-            title: updatedTitle,
-            messages: updatedMessages
-          };
-        }
-        return s;
-      }));
+      updateSession(activeSessionId, {
+        title: updatedTitle,
+        messages: updatedMessages
+      });
     }
 
     // --- GEMMA WEBGPU ROUTE ---
@@ -347,7 +360,7 @@ export default function App() {
         sender: 'spirit',
         spiritId: activeSpiritId,
         diagnosticCode: 'GEMMA2B-WEBGPU: NEURAL SOUL CHANNEL OPEN',
-        punchcardLine: '000010 /* CHANNELD VIA GOOGLE GEMMA 2B ON WEBGPU */              GEM00010',
+        punchcardLine: '000010 /* CHANNELLED VIA GOOGLE GEMMA 2B ON WEBGPU */             GEM00010',
         text: '',
         timestamp: new Date().toISOString()
       };
@@ -358,18 +371,13 @@ export default function App() {
         await gemmaEngine.generateStream(updatedMessages, (delta, full) => {
           accumulatedText = full;
           setStreamingText(full);
-          seanceAudio.playKeyClick();
+          seanceAudio.playKeyClick(activeSpiritId);
         });
 
         spiritMessage.text = accumulatedText;
-        setSessions(prev => prev.map(s => {
-          if (s.id === activeSessionId) {
-            return {
-              ...s,
-              messages: [...s.messages, spiritMessage]
-            };
-          }
-          return s;
+        updateSession(activeSessionId, s => ({
+          ...s,
+          messages: [...s.messages, spiritMessage]
         }));
         setIsStreaming(false);
         setStreamingText('');
@@ -381,8 +389,8 @@ export default function App() {
       }
     }
 
-    // --- INSTANT PL/I NECROMANCY ROUTE ---
-    const responsePayload = necromancyEngine.generateResponse(text);
+    // --- INSTANT NECROMANCY SPIRIT ROUTE (With Persona Memory) ---
+    const responsePayload = necromancyEngine.generateResponse(text, updatedMessages);
     const spiritMessage = {
       id: 'spirit-' + Date.now(),
       sender: 'spirit',
@@ -394,20 +402,15 @@ export default function App() {
     };
 
     if (manifestSpeed === 'instant') {
-      setSessions(prev => prev.map(s => {
-        if (s.id === activeSessionId) {
-          return {
-            ...s,
-            messages: [...s.messages, spiritMessage]
-          };
-        }
-        return s;
+      updateSession(activeSessionId, s => ({
+        ...s,
+        messages: [...s.messages, spiritMessage]
       }));
       seanceAudio.playChime();
       return;
     }
 
-    // Word-by-word streaming with initial 3-dot typing indicator
+    // Word-by-word streaming with initial 3-dot typing indicator and persona typing sounds
     setIsStreaming(true);
     setStreamingMessageData(spiritMessage);
     fullResponseRef.current = spiritMessage;
@@ -427,20 +430,15 @@ export default function App() {
           setStreamingText(accumulated);
           tokenIndex++;
 
-          if (tokenIndex % 4 === 0) {
-            seanceAudio.playKeyClick();
+          if (tokenIndex % 3 === 0) {
+            seanceAudio.playKeyClick(spiritMessage.spiritId || activeSpiritId);
           }
         } else {
           clearInterval(streamTimerRef.current);
           streamTimerRef.current = null;
-          setSessions(prev => prev.map(s => {
-            if (s.id === activeSessionId) {
-              return {
-                ...s,
-                messages: [...s.messages, spiritMessage]
-              };
-            }
-            return s;
+          updateSession(activeSessionId, s => ({
+            ...s,
+            messages: [...s.messages, spiritMessage]
           }));
           setIsStreaming(false);
           setStreamingText('');
@@ -452,9 +450,10 @@ export default function App() {
     }, 350);
   };
 
+  // Regenerate spirit response
   const handleRegenerate = (msgIndex) => {
     if (isStreaming) return;
-    const currentMsgs = activeSession.messages;
+    const currentMsgs = activeSession?.messages || [];
 
     let userPrompt = '';
     for (let i = msgIndex - 1; i >= 0; i--) {
@@ -467,26 +466,73 @@ export default function App() {
     if (!userPrompt) return;
 
     const truncated = currentMsgs.slice(0, msgIndex);
-    setSessions(prev => prev.map(s => {
-      if (s.id === activeSessionId) {
-        return { ...s, messages: truncated };
-      }
-      return s;
-    }));
-
-    handleSendMessage(userPrompt, true);
+    updateSession(activeSessionId, { messages: truncated });
+    handleSendMessage(userPrompt, true, truncated);
   };
 
-  const handleExportSession = () => {
+  // Edit-and-resend last or any past user message
+  const handleEditAndResend = (msgIndex, newText) => {
+    if (isStreaming || !newText.trim()) return;
+    const currentMsgs = activeSession?.messages || [];
+
+    // Slice all messages before this message index
+    const prefix = currentMsgs.slice(0, msgIndex);
+    
+    // Create updated user message
+    const updatedUserMsg = {
+      id: 'user-' + Date.now(),
+      sender: 'user',
+      text: newText.trim(),
+      timestamp: new Date().toISOString()
+    };
+
+    const newHistory = [...prefix, updatedUserMsg];
+    updateSession(activeSessionId, { messages: newHistory });
+
+    // Re-trigger response with new history
+    handleSendMessage(newText.trim(), true, newHistory);
+  };
+
+  // Export session as either Markdown (.md) or JSON (.json)
+  const handleExportSession = (format = 'md') => {
     if (!activeSession) return;
     const spirit = SPIRITS[activeSession.spiritId] || SPIRITS.pli;
+    const safeTitle = (activeSession.title || 'seance').replace(/[^a-z0-9]/gi, '_').toLowerCase();
 
+    if (format === 'json') {
+      const exportData = {
+        app: "Séance Offline Chatbot",
+        version: "2.0",
+        exportTimestamp: new Date().toISOString(),
+        session: {
+          id: activeSession.id,
+          title: activeSession.title,
+          spiritId: activeSession.spiritId,
+          spiritName: spirit.name,
+          spiritFullName: spirit.fullName,
+          createdTimestamp: activeSession.timestamp,
+          messages: activeSession.messages || []
+        }
+      };
+
+      const jsonStr = JSON.stringify(exportData, null, 2);
+      const blob = new Blob([jsonStr], { type: 'application/json;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `seance_${safeTitle}.json`;
+      link.click();
+      URL.revokeObjectURL(url);
+      return;
+    }
+
+    // Markdown export
     let md = `# SÉANCE TRANSCRIPT: ${activeSession.title}\n`;
     md += `*Summoned Entity: ${spirit.name} (${spirit.title})*\n`;
     md += `*Date of Invocations: ${new Date(activeSession.timestamp).toLocaleString()}*\n\n`;
     md += `---\n\n`;
 
-    activeSession.messages.forEach(m => {
+    (activeSession.messages || []).forEach(m => {
       if (m.sender === 'user') {
         md += `### 📜 THE MEDIUM (${new Date(m.timestamp).toLocaleTimeString()}):\n`;
         md += `${m.text}\n\n`;
@@ -504,7 +550,7 @@ export default function App() {
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.download = `seance_${activeSession.title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.md`;
+    link.download = `seance_${safeTitle}.md`;
     link.click();
     URL.revokeObjectURL(url);
   };
@@ -518,10 +564,16 @@ export default function App() {
         onSelectSession={(id) => {
           if (isStreaming) handleHastenStream();
           setActiveSessionId(id);
+          const sel = sessions.find(s => s.id === id);
+          if (sel?.spiritId) {
+            setActiveSpiritId(sel.spiritId);
+            necromancyEngine.setSpirit(sel.spiritId);
+          }
           setIsMobileMenuOpen(false);
         }}
         onNewSession={handleNewSession}
         onDeleteSession={handleDeleteSession}
+        onRenameSession={handleRenameSession}
         pinnedSessionIds={pinnedSessionIds}
         onTogglePin={handleTogglePin}
         activeSpiritId={activeSpiritId}
@@ -554,6 +606,7 @@ export default function App() {
         onSendMessage={handleSendMessage}
         onNewSession={handleNewSession}
         onRegenerate={handleRegenerate}
+        onEditAndResend={handleEditAndResend}
         isStreaming={isStreaming}
         streamingText={streamingText}
         streamingMessageData={streamingMessageData}
@@ -568,6 +621,7 @@ export default function App() {
         isThinkActive={isThinkActive}
         onToggleThink={() => setIsThinkActive(!isThinkActive)}
         onOpenVoiceMode={() => setIsVoiceModeOpen(true)}
+        candleIntensity={candleIntensity}
       />
 
       {/* ChatGPT-style Voice Séance Mode Modal */}

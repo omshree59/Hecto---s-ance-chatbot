@@ -1,11 +1,12 @@
 import React, { useRef, useEffect, useState } from 'react';
 import { 
   Menu, SquarePen, MoreHorizontal, ChevronDown, Check, 
-  Download, Trash2, Volume2, VolumeX, FileText, Cpu, BookOpen, AudioWaveform
+  Download, Trash2, Volume2, VolumeX, FileText, Cpu, BookOpen, 
+  AudioWaveform, Flame, FileJson
 } from 'lucide-react';
 import MessageBubble from './MessageBubble';
-import InputBar, { DEFAULT_SUGGESTIONS } from './InputBar';
-import { SPIRITS } from '../engine/necromancyEngine';
+import InputBar from './InputBar';
+import { SPIRITS, getDynamicSuggestions } from '../engine/necromancyEngine';
 
 export default function ChatArea({
   session,
@@ -17,6 +18,7 @@ export default function ChatArea({
   onSendMessage,
   onNewSession,
   onRegenerate,
+  onEditAndResend,
   isStreaming,
   streamingText,
   streamingMessageData,
@@ -30,7 +32,8 @@ export default function ChatArea({
   onToggleAudio,
   isThinkActive,
   onToggleThink,
-  onOpenVoiceMode
+  onOpenVoiceMode,
+  candleIntensity = 'Ritual'
 }) {
   const messagesEndRef = useRef(null);
   const containerRef = useRef(null);
@@ -41,6 +44,9 @@ export default function ChatArea({
   const spirit = SPIRITS[activeSpiritId] || SPIRITS.pli;
   const messages = session?.messages || [];
   const hasMessages = messages.length > 0 || isStreaming;
+
+  // Compute dynamic smart chips for current persona and conversation stage
+  const dynamicChips = getDynamicSuggestions(activeSpiritId, messages);
 
   // Track if user is near bottom before triggering auto-scroll
   const handleScroll = () => {
@@ -57,9 +63,16 @@ export default function ChatArea({
     }
   }, [messages, streamingText, isStreaming]);
 
+  // Candle glow style based on intensity
+  const candleGlowClass = {
+    Subtle: 'opacity-40 animate-pulse',
+    Ritual: 'opacity-80 animate-flicker',
+    Blazing: 'opacity-100 ring-2 ring-amber-400/50 animate-flicker'
+  }[candleIntensity] || 'opacity-80 animate-flicker';
+
   return (
     <main className="flex-1 flex flex-col h-screen bg-[#000000] overflow-hidden relative text-[#ECECEC]">
-      {/* TOP BAR: persona name + model dropdown on left, single new séance button & "..." menu on right. NO visible border under bar */}
+      {/* TOP BAR: persona name + model dropdown on left, subtle candle flicker, single new séance button & "..." menu on right */}
       <header className="h-14 px-4 bg-transparent flex items-center justify-between shrink-0 z-20">
         {/* Left: Mobile Drawer Trigger & Model / Persona Dropdown (ChatGPT style) */}
         <div className="flex items-center gap-1.5">
@@ -75,8 +88,16 @@ export default function ChatArea({
           <div className="relative">
             <button
               onClick={() => setIsModelDropdownOpen(!isModelDropdownOpen)}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-[12px] hover:bg-[#212121] text-white text-[18px] font-semibold transition-colors cursor-pointer select-none"
+              className="flex items-center gap-2 px-3 py-1.5 rounded-[12px] hover:bg-[#212121] text-white text-[18px] font-semibold transition-colors cursor-pointer select-none"
             >
+              {/* Subtle Candle Flicker in the Header */}
+              <div className="relative flex items-center justify-center">
+                <Flame 
+                  className={`w-4 h-4 text-amber-400 transition-all ${candleGlowClass}`} 
+                  style={{ filter: `drop-shadow(0 0 6px ${spirit.accentColor || '#f59e0b'})` }}
+                />
+              </div>
+
               <span>{spirit.name}</span>
               <span className="text-[13px] text-[#9b9b9b] font-normal">
                 ({activeEngineType === 'gemma' ? 'Gemma 2B' : 'Instant'})
@@ -109,7 +130,7 @@ export default function ChatArea({
                           : 'hover:bg-[#282828] text-[#9b9b9b]'
                       }`}
                     >
-                      <div className="font-medium text-xs">⚡ Instant PL/I</div>
+                      <div className="font-medium text-xs">⚡ Instant {spirit.name}</div>
                       <div className="text-[10px] text-[#9b9b9b]">0ms local engine</div>
                     </button>
                     <button
@@ -130,7 +151,7 @@ export default function ChatArea({
 
                   <div className="border-t border-[#2a2a2a] my-1"></div>
                   <div className="px-2 py-1 text-[11px] font-medium text-[#9b9b9b] uppercase tracking-wider">
-                    Select Spirit Entity
+                    Summoned Ancestors
                   </div>
 
                   {/* Spirits list */}
@@ -146,7 +167,7 @@ export default function ChatArea({
                       }`}
                     >
                       <div className="flex items-center gap-2">
-                        <span>{s.sigil}</span>
+                        <span style={{ color: s.accentColor }}>{s.sigil}</span>
                         <div>
                           <div className="text-[13px] font-medium leading-tight text-[#ECECEC]">{s.name}</div>
                           <div className="text-[11px] text-[#9b9b9b]">{s.era}</div>
@@ -199,7 +220,7 @@ export default function ChatArea({
                   className="fixed inset-0 z-30" 
                   onClick={() => setIsMoreMenuOpen(false)} 
                 />
-                <div className="absolute right-0 top-full mt-1.5 w-52 bg-[#212121] border border-[#2a2a2a] rounded-[16px] shadow-2xl p-1.5 z-40 space-y-0.5 animate-fade-in text-xs text-[#ECECEC]">
+                <div className="absolute right-0 top-full mt-1.5 w-56 bg-[#212121] border border-[#2a2a2a] rounded-[16px] shadow-2xl p-1.5 z-40 space-y-0.5 animate-fade-in text-xs text-[#ECECEC]">
                   <button
                     onClick={() => {
                       setIsMoreMenuOpen(false);
@@ -211,16 +232,30 @@ export default function ChatArea({
                     <span>Launch Voice Mode</span>
                   </button>
 
+                  {/* Export as Markdown */}
                   <button
                     onClick={() => {
                       setIsMoreMenuOpen(false);
-                      onExportSession();
+                      onExportSession('md');
                     }}
                     disabled={messages.length === 0}
                     className="w-full flex items-center gap-2.5 px-3 py-2 rounded-[10px] hover:bg-[#282828] text-left transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
                   >
                     <Download className="w-4 h-4 text-[#9b9b9b]" />
-                    <span>Export transcript (.md)</span>
+                    <span>Export Markdown (.md)</span>
+                  </button>
+
+                  {/* Export as JSON */}
+                  <button
+                    onClick={() => {
+                      setIsMoreMenuOpen(false);
+                      onExportSession('json');
+                    }}
+                    disabled={messages.length === 0}
+                    className="w-full flex items-center gap-2.5 px-3 py-2 rounded-[10px] hover:bg-[#282828] text-left transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+                  >
+                    <FileJson className="w-4 h-4 text-[#9b9b9b]" />
+                    <span>Export JSON (.json)</span>
                   </button>
 
                   <button
@@ -271,7 +306,7 @@ export default function ChatArea({
                     className="w-full flex items-center gap-2.5 px-3 py-2 rounded-[10px] hover:bg-[#282828] text-red-400 text-left transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
                   >
                     <Trash2 className="w-4 h-4" />
-                    <span>Delete séance history</span>
+                    <span>Clear séance history</span>
                   </button>
                 </div>
               </>
@@ -282,7 +317,7 @@ export default function ChatArea({
 
       {/* Main Content Area */}
       {!hasMessages ? (
-        /* EMPTY STATE: Centered vertically, big heading, composer centered max-width 760px, suggestion chips BELOW */
+        /* EMPTY STATE: Centered vertically, big heading, composer centered max-width 760px, SMART CHIPS BELOW */
         <div className="flex-1 flex flex-col items-center justify-center px-4 -mt-10 overflow-y-auto">
           {/* Big heading (32px, regular weight) */}
           <h1 className="text-[32px] font-normal text-white text-center tracking-tight mb-8">
@@ -303,13 +338,13 @@ export default function ChatArea({
               onOpenVoiceMode={onOpenVoiceMode}
             />
 
-            {/* Suggestion chips BELOW composer, centered, wrapped */}
+            {/* Persona and stage-specific smart suggestion chips BELOW composer */}
             <div className="flex flex-wrap items-center justify-center gap-2 mt-4">
-              {DEFAULT_SUGGESTIONS.map((suggestion, idx) => (
+              {dynamicChips.map((suggestion, idx) => (
                 <button
                   key={idx}
                   onClick={() => onSendMessage(suggestion.prompt)}
-                  className="px-3.5 py-1.5 rounded-full bg-[#212121] hover:bg-[#282828] text-[#ECECEC] text-[13px] font-sans transition-colors cursor-pointer border border-transparent shadow-xs"
+                  className="px-3.5 py-1.5 rounded-full bg-[#212121] hover:bg-[#282828] text-[#ECECEC] text-[13px] font-sans transition-colors cursor-pointer border border-[#2a2a2a] shadow-xs hover:border-neutral-600"
                 >
                   {suggestion.label}
                 </button>
@@ -333,6 +368,7 @@ export default function ChatArea({
                   message={msg}
                   onOpenPunchcard={onOpenPunchcard}
                   onRegenerate={msg.sender === 'spirit' ? () => onRegenerate(idx) : null}
+                  onEditAndResend={msg.sender === 'user' ? (newText) => onEditAndResend(idx, newText) : null}
                 />
               ))}
 
@@ -366,8 +402,12 @@ export default function ChatArea({
                 onToggleThink={onToggleThink}
                 onOpenVoiceMode={onOpenVoiceMode}
               />
-              <div className="text-center text-[12px] text-[#9b9b9b] mt-2 select-none">
-                Séance • Offline Intelligence • IBM System/360 (1964)
+              <div className="flex items-center justify-between text-[11px] text-[#9b9b9b] mt-2 px-2 select-none">
+                <div className="flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+                  <span>Séance Offline Intelligence • {spirit.fullName}</span>
+                </div>
+                <span>Session preserved in IndexedDB</span>
               </div>
             </div>
           </div>

@@ -1,9 +1,10 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import hljs from 'highlight.js';
 import { 
-  Copy, Check, Volume2, VolumeX, RotateCw, Terminal, FileText 
+  Copy, Check, Volume2, VolumeX, RotateCw, Terminal, FileText,
+  Pencil, X, ArrowUp
 } from 'lucide-react';
 import { SPIRITS } from '../engine/necromancyEngine';
 import { seanceSpeech } from '../audio/seanceSpeech';
@@ -69,14 +70,51 @@ function CodeBlock({ language, code, onOpenPunchcard }) {
   );
 }
 
+// Typewriter reveal for the stage-direction line (*...*)
+function TypewriterStageDirection({ text, isStreaming }) {
+  const [revealedLength, setRevealedLength] = useState(isStreaming ? 0 : text.length);
+
+  useEffect(() => {
+    if (!isStreaming) {
+      setRevealedLength(text.length);
+      return;
+    }
+
+    setRevealedLength(0);
+    const interval = setInterval(() => {
+      setRevealedLength(prev => {
+        if (prev >= text.length) {
+          clearInterval(interval);
+          return text.length;
+        }
+        return prev + 2;
+      });
+    }, 18);
+
+    return () => clearInterval(interval);
+  }, [text, isStreaming]);
+
+  const displayed = text.slice(0, revealedLength);
+
+  return (
+    <div className="italic text-amber-300/90 text-[15px] leading-relaxed mb-3 font-normal border-l-2 border-amber-500/40 pl-3 py-0.5">
+      *{displayed}*{revealedLength < text.length && <span className="inline-block w-1.5 h-3.5 bg-amber-400 ml-0.5 animate-pulse" />}
+    </div>
+  );
+}
+
 export default function MessageBubble({
   message,
   onOpenPunchcard,
   onRegenerate,
+  onEditAndResend,
   isStreaming = false
 }) {
   const [copiedText, setCopiedText] = useState(false);
   const [isSpeakingThis, setIsSpeakingThis] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editText, setEditText] = useState(message.text || '');
+  const editTextareaRef = useRef(null);
 
   const isUser = message.sender === 'user';
   const spirit = SPIRITS[message.spiritId] || SPIRITS.pli;
@@ -90,7 +128,15 @@ export default function MessageBubble({
     };
   }, [isSpeakingThis]);
 
-  // Copy entire message text
+  // Focus textarea when entering edit mode
+  useEffect(() => {
+    if (isEditing && editTextareaRef.current) {
+      editTextareaRef.current.focus();
+      editTextareaRef.current.selectionStart = editTextareaRef.current.value.length;
+    }
+  }, [isEditing]);
+
+  // Copy message text
   const handleCopyMessage = () => {
     navigator.clipboard.writeText(message.text || '');
     setCopiedText(true);
@@ -111,6 +157,15 @@ export default function MessageBubble({
     });
   };
 
+  // Handle Edit Submit
+  const handleSaveAndResend = () => {
+    if (!editText.trim()) return;
+    setIsEditing(false);
+    if (onEditAndResend) {
+      onEditAndResend(editText.trim());
+    }
+  };
+
   // Parse initial stage direction if text begins with *...*
   const { stageDirection, markdownBody } = useMemo(() => {
     const raw = message.text || '';
@@ -128,9 +183,77 @@ export default function MessageBubble({
   }, [message.text]);
 
   // User Message: Right-aligned bubble, bg #2f2f2f, radius 20px, padding 10px 16px, max-width 70%
+  // Includes hover actions: Copy & Edit-and-resend
   if (isUser) {
+    if (isEditing) {
+      return (
+        <div className="flex justify-end animate-fade-in w-full">
+          <div className="w-full max-w-[70%] bg-[#212121] border border-[#3a3a3a] text-[#ECECEC] rounded-[18px] p-3 shadow-lg">
+            <textarea
+              ref={editTextareaRef}
+              value={editText}
+              onChange={(e) => setEditText(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                  e.preventDefault();
+                  handleSaveAndResend();
+                } else if (e.key === 'Escape') {
+                  setIsEditing(false);
+                  setEditText(message.text || '');
+                }
+              }}
+              rows={Math.min(6, Math.max(2, editText.split('\n').length))}
+              className="w-full bg-[#171717] text-[#ECECEC] text-[15px] leading-relaxed p-2.5 rounded-[12px] border border-[#2e2e2e] focus:outline-none focus:border-neutral-500 resize-none font-sans"
+            />
+            <div className="flex items-center justify-end gap-2 mt-2">
+              <button
+                onClick={() => {
+                  setIsEditing(false);
+                  setEditText(message.text || '');
+                }}
+                className="px-3 py-1.5 rounded-[10px] text-xs text-[#9b9b9b] hover:text-white hover:bg-[#282828] transition-colors cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleSaveAndResend}
+                disabled={!editText.trim()}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-[10px] bg-white text-black hover:bg-neutral-200 text-xs font-medium transition-colors cursor-pointer disabled:opacity-40"
+              >
+                <ArrowUp className="w-3.5 h-3.5" />
+                <span>Save & Resend</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
     return (
-      <div className="flex justify-end animate-fade-in w-full">
+      <div className="flex justify-end group animate-fade-in w-full items-center gap-2">
+        {/* User hover actions: Edit & Copy */}
+        <div className="opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1 text-[#9b9b9b]">
+          {onEditAndResend && (
+            <button
+              onClick={() => {
+                setEditText(message.text || '');
+                setIsEditing(true);
+              }}
+              className="p-1.5 rounded-[8px] hover:bg-[#212121] hover:text-white transition-colors cursor-pointer"
+              title="Edit and resend"
+            >
+              <Pencil className="w-3.5 h-3.5" />
+            </button>
+          )}
+          <button
+            onClick={handleCopyMessage}
+            className="p-1.5 rounded-[8px] hover:bg-[#212121] hover:text-white transition-colors cursor-pointer"
+            title="Copy message"
+          >
+            {copiedText ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+          </button>
+        </div>
+
         <div className="max-w-[70%] bg-[#2f2f2f] text-[#ECECEC] rounded-[20px] py-[10px] px-[16px] text-[16px] leading-[1.75] tracking-[-0.01em] shadow-xs">
           <p className="whitespace-pre-wrap">{message.text}</p>
         </div>
@@ -159,7 +282,10 @@ export default function MessageBubble({
       <div className="flex-1 min-w-0 space-y-1.5">
         {/* Subtle name, era and speaking wave badge */}
         <div className="flex items-center gap-2 text-[#9b9b9b] text-xs">
-          <span className="font-semibold text-neutral-300">
+          <span 
+            className="font-semibold"
+            style={{ color: spirit.accentColor }}
+          >
             {spirit.name}
           </span>
           <span className="text-[11px] font-mono opacity-70">
@@ -186,12 +312,13 @@ export default function MessageBubble({
             <span className="w-2 h-2 rounded-full bg-[#9b9b9b] typing-dot"></span>
           </div>
         ) : (
-          <div className="text-[16px] leading-[1.75] tracking-[-0.01em] text-[#ECECEC] font-sans">
-            {/* Italic amber stage direction strictly at start of message */}
+          <div className={`text-[16px] leading-[1.75] tracking-[-0.01em] text-[#ECECEC] ${spirit.fontFlavor || 'font-sans'}`}>
+            {/* Italic amber stage direction strictly at start of message with typewriter reveal */}
             {stageDirection && (
-              <div className="italic text-amber-300/90 text-[15px] leading-relaxed mb-3 font-normal">
-                *{stageDirection}*
-              </div>
+              <TypewriterStageDirection 
+                text={stageDirection} 
+                isStreaming={isStreaming} 
+              />
             )}
 
             {/* Markdown rendering via react-markdown + remark-gfm */}

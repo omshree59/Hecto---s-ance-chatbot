@@ -1,9 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   SquarePen, Search, PanelLeft, BookOpen, Flame, Volume2, 
-  VolumeX, Pin, Trash2, Cpu, ChevronDown, Check, User, X
+  VolumeX, Pin, Trash2, Cpu, ChevronDown, Check, User, X,
+  Pencil, MessageSquare
 } from 'lucide-react';
 import { SPIRITS } from '../engine/necromancyEngine';
+import { seanceDB } from '../db/seanceDB';
 
 export default function Sidebar({
   sessions,
@@ -11,6 +13,7 @@ export default function Sidebar({
   onSelectSession,
   onNewSession,
   onDeleteSession,
+  onRenameSession,
   pinnedSessionIds = [],
   onTogglePin,
   activeSpiritId,
@@ -34,14 +37,57 @@ export default function Sidebar({
   const [showCandleSettings, setShowCandleSettings] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearching, setIsSearching] = useState(false);
+  const [searchResults, setSearchResults] = useState([]);
+  const [editingSessionId, setEditingSessionId] = useState(null);
+  const [editTitleText, setEditTitleText] = useState('');
 
-  // Filter sessions by search query if active
-  const filteredSessions = sessions.filter(s => 
-    (s.title || '').toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  // Perform full-text search across messages in IndexedDB when searchQuery changes
+  useEffect(() => {
+    if (!searchQuery.trim()) {
+      setSearchResults([]);
+      return;
+    }
 
-  const pinnedSessions = filteredSessions.filter(s => pinnedSessionIds.includes(s.id));
-  const recentSessions = filteredSessions.filter(s => !pinnedSessionIds.includes(s.id));
+    let isCurrent = true;
+    const timer = setTimeout(async () => {
+      try {
+        const matches = await seanceDB.searchSessions(searchQuery);
+        if (isCurrent) {
+          setSearchResults(matches);
+        }
+      } catch (e) {
+        // Fallback to title filtering
+        if (isCurrent) {
+          const q = searchQuery.toLowerCase();
+          const fallbackMatches = sessions
+            .filter(s => (s.title || '').toLowerCase().includes(q))
+            .map(s => ({ session: s, matchedSnippet: s.title }));
+          setSearchResults(fallbackMatches);
+        }
+      }
+    }, 150);
+
+    return () => {
+      isCurrent = false;
+      clearTimeout(timer);
+    };
+  }, [searchQuery, sessions]);
+
+  const handleStartRename = (session, e) => {
+    e.stopPropagation();
+    setEditingSessionId(session.id);
+    setEditTitleText(session.title || '');
+  };
+
+  const handleSaveRename = (sessionId) => {
+    if (editTitleText.trim() && onRenameSession) {
+      onRenameSession(sessionId, editTitleText.trim());
+    }
+    setEditingSessionId(null);
+  };
+
+  const pinnedSessions = sessions.filter(s => pinnedSessionIds.includes(s.id));
+  const recentSessions = sessions.filter(s => !pinnedSessionIds.includes(s.id));
 
   return (
     <>
@@ -73,7 +119,10 @@ export default function Sidebar({
             <button
               onClick={() => {
                 setIsSearching(!isSearching);
-                if (isSearching) setSearchQuery('');
+                if (isSearching) {
+                  setSearchQuery('');
+                  setSearchResults([]);
+                }
               }}
               className="p-2 rounded-[12px] hover:bg-[#212121] text-[#9b9b9b] hover:text-[#ECECEC] transition-colors cursor-pointer"
               title="Search séances"
@@ -93,14 +142,24 @@ export default function Sidebar({
         {/* Search bar row if searching */}
         {isSearching && (
           <div className="px-3 pb-2 shrink-0">
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search transcripts..."
-              autoFocus
-              className="w-full bg-[#212121] text-[#ECECEC] placeholder-[#9b9b9b] text-sm px-3 py-1.5 rounded-[12px] border border-[#2a2a2a] focus:outline-none focus:border-neutral-500"
-            />
+            <div className="relative">
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search séances & topics..."
+                autoFocus
+                className="w-full bg-[#212121] text-[#ECECEC] placeholder-[#9b9b9b] text-sm px-3 py-1.5 rounded-[12px] border border-[#2a2a2a] focus:outline-none focus:border-neutral-500"
+              />
+              {searchQuery && (
+                <button
+                  onClick={() => setSearchQuery('')}
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-white"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              )}
+            </div>
           </div>
         )}
 
@@ -197,109 +256,206 @@ export default function Sidebar({
           </button>
         </div>
 
-        {/* 4, 5, 6, 7. Scrollable Section: Pinned, Projects, Recents */}
+        {/* 4, 5, 6, 7. Scrollable Section: Search results or Pinned, Projects, Recents */}
         <div className="flex-1 overflow-y-auto px-3 py-3 space-y-4">
-          {/* 4. Section label "Pinned" */}
-          <div>
-            <div className="text-[14px] text-[#9b9b9b] px-3 pb-1 font-medium">
-              Pinned
-            </div>
-            {pinnedSessions.length === 0 ? (
-              <div className="text-[13px] text-[#9b9b9b] px-3 py-1 opacity-60 italic">
-                No pinned séances
+          {/* SEARCH RESULTS VIEW */}
+          {isSearching && searchQuery.trim() ? (
+            <div>
+              <div className="text-[12px] font-semibold text-neutral-400 px-3 pb-2 uppercase tracking-wider flex items-center gap-1.5">
+                <Search className="w-3.5 h-3.5 text-amber-400" />
+                <span>Search Results ({searchResults.length})</span>
               </div>
-            ) : (
-              <div className="space-y-0.5">
-                {pinnedSessions.map(s => {
-                  const isActive = s.id === activeSessionId;
-                  return (
+              {searchResults.length === 0 ? (
+                <div className="text-[13px] text-[#9b9b9b] px-3 py-2 italic opacity-60">
+                  No séances found matching "{searchQuery}"
+                </div>
+              ) : (
+                <div className="space-y-1">
+                  {searchResults.map(({ session: s, matchedSnippet }) => (
                     <div
                       key={s.id}
-                      onClick={() => onSelectSession(s.id)}
-                      className={`group flex items-center justify-between px-3 py-1.5 rounded-[12px] cursor-pointer text-[14px] transition-colors ${
-                        isActive ? 'bg-[#212121] text-white font-medium' : 'text-[#ECECEC] hover:bg-[#212121]'
+                      onClick={() => {
+                        onSelectSession(s.id);
+                        if (isOpen && onCloseMobile) onCloseMobile();
+                      }}
+                      className={`p-2.5 rounded-[12px] cursor-pointer transition-colors border border-transparent ${
+                        s.id === activeSessionId 
+                          ? 'bg-[#212121] border-[#2a2a2a] text-white' 
+                          : 'hover:bg-[#212121] text-[#ECECEC]'
                       }`}
                     >
-                      <span className="truncate pr-2">{s.title || 'Untitled Séance'}</span>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onTogglePin && onTogglePin(s.id);
-                        }}
-                        className="opacity-0 group-hover:opacity-100 p-1 text-[#9b9b9b] hover:text-white"
-                        title="Unpin"
-                      >
-                        <Pin className="w-3.5 h-3.5 fill-current" />
-                      </button>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-
-          {/* 5. Section label "Projects" with muted empty state "No projects" */}
-          <div>
-            <div className="text-[14px] text-[#9b9b9b] px-3 pb-1 font-medium">
-              Projects
-            </div>
-            <div className="text-[13px] text-[#9b9b9b] px-3 py-1 opacity-60">
-              No projects
-            </div>
-          </div>
-
-          {/* 6. Section label "Recents", then list of séance transcripts */}
-          <div>
-            <div className="text-[14px] text-[#9b9b9b] px-3 pb-1 font-medium">
-              Recents
-            </div>
-            {recentSessions.length === 0 ? (
-              <div className="text-[13px] text-[#9b9b9b] px-3 py-1 opacity-60 italic">
-                No recent séances
-              </div>
-            ) : (
-              <div className="space-y-0.5">
-                {recentSessions.map(s => {
-                  const isActive = s.id === activeSessionId;
-                  return (
-                    <div
-                      key={s.id}
-                      onClick={() => onSelectSession(s.id)}
-                      className={`group flex items-center justify-between px-3 py-1.5 rounded-[12px] cursor-pointer text-[14px] transition-colors ${
-                        isActive ? 'bg-[#212121] text-white font-medium' : 'text-[#ECECEC] hover:bg-[#212121]'
-                      }`}
-                    >
-                      <span className="truncate pr-2">{s.title || 'Untitled Séance'}</span>
-                      <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100">
-                        {onTogglePin && (
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              onTogglePin(s.id);
-                            }}
-                            className="p-1 text-[#9b9b9b] hover:text-white"
-                            title="Pin to top"
-                          >
-                            <Pin className="w-3.5 h-3.5" />
-                          </button>
-                        )}
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            onDeleteSession(s.id);
-                          }}
-                          className="p-1 text-[#9b9b9b] hover:text-red-400"
-                          title="Delete transcript"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </button>
+                      <div className="text-[14px] font-medium truncate">
+                        {s.title || 'Untitled Séance'}
+                      </div>
+                      <div className="text-[11px] text-[#9b9b9b] line-clamp-2 mt-0.5 font-mono">
+                        {matchedSnippet}
                       </div>
                     </div>
-                  );
-                })}
+                  ))}
+                </div>
+              )}
+            </div>
+          ) : (
+            <>
+              {/* 4. Section label "Pinned" */}
+              <div>
+                <div className="text-[14px] text-[#9b9b9b] px-3 pb-1 font-medium">
+                  Pinned
+                </div>
+                {pinnedSessions.length === 0 ? (
+                  <div className="text-[13px] text-[#9b9b9b] px-3 py-1 opacity-60 italic">
+                    No pinned séances
+                  </div>
+                ) : (
+                  <div className="space-y-0.5">
+                    {pinnedSessions.map(s => {
+                      const isActive = s.id === activeSessionId;
+                      const isEditingThis = editingSessionId === s.id;
+
+                      return (
+                        <div
+                          key={s.id}
+                          onClick={() => onSelectSession(s.id)}
+                          className={`group flex items-center justify-between px-3 py-1.5 rounded-[12px] cursor-pointer text-[14px] transition-colors ${
+                            isActive ? 'bg-[#212121] text-white font-medium' : 'text-[#ECECEC] hover:bg-[#212121]'
+                          }`}
+                        >
+                          {isEditingThis ? (
+                            <input
+                              type="text"
+                              value={editTitleText}
+                              onChange={(e) => setEditTitleText(e.target.value)}
+                              onBlur={() => handleSaveRename(s.id)}
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter') handleSaveRename(s.id);
+                                if (e.key === 'Escape') setEditingSessionId(null);
+                              }}
+                              autoFocus
+                              onClick={(e) => e.stopPropagation()}
+                              className="w-full bg-[#171717] text-white text-xs px-2 py-0.5 rounded border border-neutral-500 focus:outline-none"
+                            />
+                          ) : (
+                            <>
+                              <span className="truncate pr-2">{s.title || 'Untitled Séance'}</span>
+                              <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 shrink-0">
+                                <button
+                                  onClick={(e) => handleStartRename(s, e)}
+                                  className="p-1 text-[#9b9b9b] hover:text-white"
+                                  title="Rename séance"
+                                >
+                                  <Pencil className="w-3.5 h-3.5" />
+                                </button>
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    onTogglePin && onTogglePin(s.id);
+                                  }}
+                                  className="p-1 text-[#9b9b9b] hover:text-white"
+                                  title="Unpin"
+                                >
+                                  <Pin className="w-3.5 h-3.5 fill-current" />
+                                </button>
+                              </div>
+                            </>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
-            )}
-          </div>
+
+              {/* 5. Section label "Projects" with muted empty state "No projects" */}
+              <div>
+                <div className="text-[14px] text-[#9b9b9b] px-3 pb-1 font-medium">
+                  Projects
+                </div>
+                <div className="text-[13px] text-[#9b9b9b] px-3 py-1 opacity-60">
+                  No projects
+                </div>
+              </div>
+
+              {/* 6. Section label "Recents", then list of séance transcripts */}
+              <div>
+                <div className="text-[14px] text-[#9b9b9b] px-3 pb-1 font-medium">
+                  Recents
+                </div>
+                {recentSessions.length === 0 ? (
+                  <div className="text-[13px] text-[#9b9b9b] px-3 py-1 opacity-60 italic">
+                    No recent séances
+                  </div>
+                ) : (
+                  <div className="space-y-0.5">
+                    {recentSessions.map(s => {
+                      const isActive = s.id === activeSessionId;
+                      const isEditingThis = editingSessionId === s.id;
+
+                      return (
+                        <div
+                          key={s.id}
+                          onClick={() => onSelectSession(s.id)}
+                          className={`group flex items-center justify-between px-3 py-1.5 rounded-[12px] cursor-pointer text-[14px] transition-colors ${
+                            isActive ? 'bg-[#212121] text-white font-medium' : 'text-[#ECECEC] hover:bg-[#212121]'
+                          }`}
+                        >
+                          {isEditingThis ? (
+                            <input
+                              type="text"
+                              value={editTitleText}
+                              onChange={(e) => setEditTitleText(e.target.value)}
+                              onBlur={() => handleSaveRename(s.id)}
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter') handleSaveRename(s.id);
+                                if (e.key === 'Escape') setEditingSessionId(null);
+                              }}
+                              autoFocus
+                              onClick={(e) => e.stopPropagation()}
+                              className="w-full bg-[#171717] text-white text-xs px-2 py-0.5 rounded border border-neutral-500 focus:outline-none"
+                            />
+                          ) : (
+                            <>
+                              <span className="truncate pr-2">{s.title || 'Untitled Séance'}</span>
+                              <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 shrink-0">
+                                <button
+                                  onClick={(e) => handleStartRename(s, e)}
+                                  className="p-1 text-[#9b9b9b] hover:text-white"
+                                  title="Rename séance"
+                                >
+                                  <Pencil className="w-3.5 h-3.5" />
+                                </button>
+                                {onTogglePin && (
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      onTogglePin(s.id);
+                                    }}
+                                    className="p-1 text-[#9b9b9b] hover:text-white"
+                                    title="Pin to top"
+                                  >
+                                    <Pin className="w-3.5 h-3.5" />
+                                  </button>
+                                )}
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    onDeleteSession(s.id);
+                                  }}
+                                  className="p-1 text-[#9b9b9b] hover:text-red-400"
+                                  title="Delete transcript"
+                                >
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                </button>
+                              </div>
+                            </>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            </>
+          )}
         </div>
 
         {/* 8. Bottom (sticky): Intelligence Core switch, Ancestor dropdown, User profile row */}
