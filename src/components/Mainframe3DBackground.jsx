@@ -3,6 +3,263 @@ import * as THREE from 'three';
 import { RotateCw, Pause, Play, Compass } from 'lucide-react';
 import { SPIRITS } from '../engine/necromancyEngine';
 
+// --- GLORIFIED IBM TEXTURE GENERATORS ---
+
+/**
+ * Generates an illuminated, high-resolution authentic IBM 8-bar header plaque.
+ */
+function createIBMHeaderTexture() {
+  const canvas = document.createElement('canvas');
+  canvas.width = 1024;
+  canvas.height = 128;
+  const ctx = canvas.getContext('2d');
+
+  // Deep IBM Blue gradient background
+  const bgGrad = ctx.createLinearGradient(0, 0, 0, 128);
+  bgGrad.addColorStop(0, '#0a213d');
+  bgGrad.addColorStop(0.3, '#103258');
+  bgGrad.addColorStop(0.7, '#07182c');
+  bgGrad.addColorStop(1, '#020b14');
+  ctx.fillStyle = bgGrad;
+  ctx.fillRect(0, 0, 1024, 128);
+
+  // Metallic brushed aluminum outer frame
+  ctx.strokeStyle = '#64748b';
+  ctx.lineWidth = 4;
+  ctx.strokeRect(3, 3, 1018, 122);
+
+  // Subtle cyan neon inner highlight
+  ctx.strokeStyle = 'rgba(56, 189, 248, 0.45)';
+  ctx.lineWidth = 1.5;
+  ctx.strokeRect(8, 8, 1008, 112);
+
+  // 1. THE GLORIFIED 8-BAR IBM LOGO
+  ctx.save();
+  ctx.font = '900 84px "Arial Black", "Helvetica", sans-serif';
+  ctx.textBaseline = 'middle';
+  
+  // Neon cyan back-glow
+  ctx.shadowColor = '#38bdf8';
+  ctx.shadowBlur = 16;
+  ctx.fillStyle = '#ffffff';
+  ctx.fillText('IBM', 44, 64);
+  ctx.restore();
+
+  // Draw 8 horizontal cuts to form the iconic 8-bar IBM stripes
+  ctx.fillStyle = '#07182c';
+  const startY = 24;
+  const totalH = 80;
+  const numBars = 8;
+  const gapH = 3.5;
+  const barH = (totalH - (numBars - 1) * gapH) / numBars;
+  for (let b = 0; b < numBars - 1; b++) {
+    const y = startY + (b + 1) * barH + b * gapH;
+    ctx.fillRect(40, y, 224, gapH);
+  }
+
+  // Vertical brushed metal divider line
+  const divGrad = ctx.createLinearGradient(0, 16, 0, 112);
+  divGrad.addColorStop(0, 'rgba(148, 163, 184, 0.1)');
+  divGrad.addColorStop(0.5, '#94a3b8');
+  divGrad.addColorStop(1, 'rgba(148, 163, 184, 0.1)');
+  ctx.strokeStyle = divGrad;
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(280, 16);
+  ctx.lineTo(280, 112);
+  ctx.stroke();
+
+  // 2. MODEL IDENTITY: SYSTEM / 360
+  ctx.font = '700 36px "Inter", "Segoe UI", sans-serif';
+  ctx.fillStyle = '#f8fafc';
+  ctx.shadowColor = 'rgba(0,0,0,0.9)';
+  ctx.shadowBlur = 6;
+  ctx.fillText('SYSTEM / 360', 305, 50);
+
+  // 3. HARDWARE SPEC: TYPE 2401 TAPE DRIVE
+  ctx.font = '600 20px "Courier New", monospace';
+  ctx.fillStyle = '#38bdf8';
+  ctx.shadowBlur = 0;
+  ctx.fillText('TYPE 2401 • MAGNETIC TAPE DRIVE', 305, 88);
+
+  // 4. CORPORATE HERITAGE & POWER INDICATOR
+  ctx.font = '600 15px "Inter", sans-serif';
+  ctx.fillStyle = '#94a3b8';
+  ctx.textAlign = 'right';
+  ctx.fillText('INTERNATIONAL BUSINESS MACHINES CORP.', 980, 48);
+
+  // Glowing Green "READY / ON-LINE" Pilot
+  ctx.beginPath();
+  ctx.arc(840, 84, 6, 0, Math.PI * 2);
+  ctx.fillStyle = '#22c55e';
+  ctx.shadowColor = '#22c55e';
+  ctx.shadowBlur = 10;
+  ctx.fill();
+
+  ctx.font = '600 14px "Courier New", monospace';
+  ctx.fillStyle = '#4ade80';
+  ctx.shadowBlur = 0;
+  ctx.fillText('READY / ON-LINE', 980, 88);
+
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.anisotropy = 8;
+  return texture;
+}
+
+/**
+ * Generates an authentic circular IBM hubcap texture for magnetic tape reels.
+ */
+function createReelHubTexture() {
+  const canvas = document.createElement('canvas');
+  canvas.width = 256;
+  canvas.height = 256;
+  const ctx = canvas.getContext('2d');
+
+  // Brushed steel radial hub gradient
+  const grad = ctx.createRadialGradient(128, 128, 20, 128, 128, 128);
+  grad.addColorStop(0, '#334155');
+  grad.addColorStop(0.7, '#1e293b');
+  grad.addColorStop(1, '#0f172a');
+  ctx.fillStyle = grad;
+  ctx.beginPath();
+  ctx.arc(128, 128, 124, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Chrome outer rim
+  ctx.strokeStyle = '#94a3b8';
+  ctx.lineWidth = 6;
+  ctx.stroke();
+
+  // Inner hairline ring
+  ctx.strokeStyle = '#38bdf8';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.arc(128, 128, 110, 0, Math.PI * 2);
+  ctx.stroke();
+
+  // Bold "IBM" in center of hub
+  ctx.font = '900 64px "Arial Black", "Helvetica", sans-serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillStyle = '#f8fafc';
+  ctx.shadowColor = '#38bdf8';
+  ctx.shadowBlur = 8;
+  ctx.fillText('IBM', 128, 128);
+
+  return new THREE.CanvasTexture(canvas);
+}
+
+/**
+ * Generates an engraved gold-and-slate IBM 2401 read/write head assembly badge.
+ */
+function createHeadBadgeTexture() {
+  const canvas = document.createElement('canvas');
+  canvas.width = 512;
+  canvas.height = 128;
+  const ctx = canvas.getContext('2d');
+
+  ctx.fillStyle = '#0b131e';
+  ctx.fillRect(0, 0, 512, 128);
+
+  ctx.strokeStyle = '#d4af37'; // Vintage gold trim
+  ctx.lineWidth = 4;
+  ctx.strokeRect(4, 4, 504, 120);
+
+  ctx.font = '900 48px "Arial Black", sans-serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillStyle = '#e2e8f0';
+  ctx.fillText('IBM 2401', 256, 46);
+
+  ctx.font = '700 18px "Courier New", monospace';
+  ctx.fillStyle = '#d4af37';
+  ctx.fillText('9-TRACK HIGH DENSITY TAPE HEAD', 256, 92);
+
+  return new THREE.CanvasTexture(canvas);
+}
+
+/**
+ * Generates an antique cast-brass manufacturer plaque for the lower console.
+ */
+function createConsoleBadgeTexture() {
+  const canvas = document.createElement('canvas');
+  canvas.width = 1024;
+  canvas.height = 128;
+  const ctx = canvas.getContext('2d');
+
+  // Antique brass / bronze metallic finish
+  const grad = ctx.createLinearGradient(0, 0, 0, 128);
+  grad.addColorStop(0, '#59441b');
+  grad.addColorStop(0.5, '#785b24');
+  grad.addColorStop(1, '#3b2c10');
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, 1024, 128);
+
+  ctx.strokeStyle = '#d4af37';
+  ctx.lineWidth = 4;
+  ctx.strokeRect(4, 4, 1016, 120);
+
+  ctx.font = '800 32px "Inter", "Georgia", serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillStyle = '#fef08a';
+  ctx.shadowColor = '#000000';
+  ctx.shadowBlur = 6;
+  ctx.fillText('★  INTERNATIONAL BUSINESS MACHINES CORPORATION  ★', 512, 48);
+
+  ctx.font = '600 20px "Courier New", monospace';
+  ctx.fillStyle = '#fde047';
+  ctx.fillText('SYSTEM / 360 DATA PROCESSING SYSTEM • ARMONK, N.Y.', 512, 90);
+
+  return new THREE.CanvasTexture(canvas);
+}
+
+/**
+ * Generates an authentic stamped industrial aluminum specification plate for the rear.
+ */
+function createSpecPlateTexture() {
+  const canvas = document.createElement('canvas');
+  canvas.width = 512;
+  canvas.height = 256;
+  const ctx = canvas.getContext('2d');
+
+  // Stamped aluminum finish
+  ctx.fillStyle = '#cbd5e1';
+  ctx.fillRect(0, 0, 512, 256);
+
+  ctx.strokeStyle = '#475569';
+  ctx.lineWidth = 6;
+  ctx.strokeRect(6, 6, 500, 244);
+
+  // 4 corner mounting rivets
+  const rivets = [[20, 20], [492, 20], [20, 236], [492, 236]];
+  rivets.forEach(([rx, ry]) => {
+    ctx.beginPath();
+    ctx.arc(rx, ry, 6, 0, Math.PI * 2);
+    ctx.fillStyle = '#334155';
+    ctx.fill();
+  });
+
+  // Stamped bold IBM Header
+  ctx.fillStyle = '#0f172a';
+  ctx.font = '900 52px "Arial Black", sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('IBM', 256, 60);
+
+  ctx.font = '700 17px "Inter", sans-serif';
+  ctx.fillText('INTERNATIONAL BUSINESS MACHINES CORP.', 256, 94);
+
+  ctx.font = '600 15px "Courier New", monospace';
+  ctx.fillText('SYSTEM/360 MAGNETIC TAPE UNIT', 256, 126);
+  ctx.fillText('MODEL: 2401-VI   SERIAL NO: 360-1964-PLI', 256, 156);
+  ctx.fillText('VOLTS: 208/230V   3-PHASE   60 CYCLES', 256, 186);
+
+  ctx.font = 'italic 13px "Georgia", serif';
+  ctx.fillText('MADE IN U.S.A. • ARMONK, NEW YORK', 256, 220);
+
+  return new THREE.CanvasTexture(canvas);
+}
+
 export default function Mainframe3DBackground({
   activeSpiritId = 'pli',
   isStreaming = false,
@@ -66,6 +323,9 @@ export default function Mainframe3DBackground({
 
     let width = containerRef.current.clientWidth || window.innerWidth;
     let height = containerRef.current.clientHeight || window.innerHeight;
+
+    // Track created textures for disposal on unmount
+    const createdTextures = [];
 
     // 1. Scene with subtle deep atmospheric fog
     const scene = new THREE.Scene();
@@ -144,19 +404,40 @@ export default function Mainframe3DBackground({
     panel.position.set(0, 0, 0.70);
     mainframeGroup.add(panel);
 
-    // Top IBM Blue Header Nameplate
-    const headerGeo = new THREE.BoxGeometry(2.12, 0.26, 0.02);
-    const headerMat = new THREE.MeshStandardMaterial({
-      color: 0x0f2b48, // Authentic IBM Deep Blue
-      roughness: 0.2,
-      metalness: 0.4
+    // ─────────────────────────────────────────────────────────
+    // TOP GLORIFIED IBM HEADER PLAQUE (Authentic 8-Bar IBM Logo)
+    // ─────────────────────────────────────────────────────────
+    const headerBoxGeo = new THREE.BoxGeometry(2.14, 0.28, 0.03);
+    const headerBoxMat = new THREE.MeshStandardMaterial({
+      color: 0x07111c,
+      roughness: 0.3,
+      metalness: 0.8
     });
-    const header = new THREE.Mesh(headerGeo, headerMat);
-    header.position.set(0, 1.84, 0.73);
-    mainframeGroup.add(header);
+    const headerBox = new THREE.Mesh(headerBoxGeo, headerBoxMat);
+    headerBox.position.set(0, 1.84, 0.73);
+    mainframeGroup.add(headerBox);
+
+    const ibmHeaderTex = createIBMHeaderTexture();
+    createdTextures.push(ibmHeaderTex);
+
+    const headerDecalGeo = new THREE.PlaneGeometry(2.12, 0.26);
+    const headerDecalMat = new THREE.MeshStandardMaterial({
+      map: ibmHeaderTex,
+      emissiveMap: ibmHeaderTex,
+      emissive: 0x93c5fd,
+      emissiveIntensity: 0.42,
+      roughness: 0.15,
+      metalness: 0.6
+    });
+    const headerDecal = new THREE.Mesh(headerDecalGeo, headerDecalMat);
+    headerDecal.position.set(0, 0, 0.016);
+    headerBox.add(headerDecal);
 
     // 6. Magnetic Tape Reels (Left Supply & Right Take-up)
     // High-contrast polished chrome flanges with prominent cutouts and silver registration rim bolts
+    const hubTexture = createReelHubTexture();
+    createdTextures.push(hubTexture);
+
     const createReel = (isLeft) => {
       const reelGroup = new THREE.Group();
 
@@ -189,6 +470,17 @@ export default function Mainframe3DBackground({
       hub.rotation.x = Math.PI / 2;
       hub.position.z = -0.028;
       reelGroup.add(hub);
+
+      // Glorified IBM Hubcap Emblem
+      const hubcapGeo = new THREE.CircleGeometry(0.18, 32);
+      const hubcapMat = new THREE.MeshStandardMaterial({
+        map: hubTexture,
+        roughness: 0.2,
+        metalness: 0.85
+      });
+      const hubcap = new THREE.Mesh(hubcapGeo, hubcapMat);
+      hubcap.position.set(0, 0, 0.012);
+      reelGroup.add(hubcap);
 
       // Tape Pack cylinder (ferric oxide dark brown)
       const radius = isLeft ? 0.47 : 0.34;
@@ -260,6 +552,23 @@ export default function Mainframe3DBackground({
     head.position.set(0, 0.82, 0.75);
     mainframeGroup.add(head);
 
+    // Engraved IBM 2401 Badge on the Head Assembly
+    const headBadgeTex = createHeadBadgeTexture();
+    createdTextures.push(headBadgeTex);
+
+    const headBadgeGeo = new THREE.PlaneGeometry(0.32, 0.08);
+    const headBadgeMat = new THREE.MeshStandardMaterial({
+      map: headBadgeTex,
+      emissiveMap: headBadgeTex,
+      emissive: 0xffffff,
+      emissiveIntensity: 0.2,
+      roughness: 0.25,
+      metalness: 0.8
+    });
+    const headBadge = new THREE.Mesh(headBadgeGeo, headBadgeMat);
+    headBadge.position.set(0, 0.035, 0.046);
+    head.add(headBadge);
+
     // Glowing head gap indicator in spirit accent color
     const gapGeo = new THREE.BoxGeometry(0.02, 0.12, 0.10);
     const gapMat = new THREE.MeshBasicMaterial({ color: spiritColor });
@@ -320,13 +629,33 @@ export default function Mainframe3DBackground({
     mainframeGroup.add(rightLoop);
     tapeLoopRightRef.current = rightLoop;
 
-    // 8. Console Display Panel with 32 Blinking Pilot Register Lights
+    // ─────────────────────────────────────────────────────────
+    // 8. Console Display Panel & Vintage Brass IBM Plaque
+    // ─────────────────────────────────────────────────────────
     const consoleGeo = new THREE.BoxGeometry(2.05, 0.82, 0.16);
     const consoleMat = new THREE.MeshStandardMaterial({ color: 0x1f242d, roughness: 0.4, metalness: 0.6 });
     const consoleBox = new THREE.Mesh(consoleGeo, consoleMat);
     consoleBox.position.set(0, -1.34, 0.75);
     mainframeGroup.add(consoleBox);
 
+    // Glorified Brass "INTERNATIONAL BUSINESS MACHINES CORPORATION" Plaque
+    const consoleBadgeTex = createConsoleBadgeTexture();
+    createdTextures.push(consoleBadgeTex);
+
+    const consoleBadgeGeo = new THREE.PlaneGeometry(1.92, 0.14);
+    const consoleBadgeMat = new THREE.MeshStandardMaterial({
+      map: consoleBadgeTex,
+      emissiveMap: consoleBadgeTex,
+      emissive: 0xfef08a,
+      emissiveIntensity: 0.22,
+      roughness: 0.3,
+      metalness: 0.8
+    });
+    const consoleBadge = new THREE.Mesh(consoleBadgeGeo, consoleBadgeMat);
+    consoleBadge.position.set(0, 0.28, 0.082);
+    consoleBox.add(consoleBadge);
+
+    // 32 Blinking Pilot Register Lamps
     const lights = [];
     const lightCols = 16;
     const lightRows = 2;
@@ -345,7 +674,7 @@ export default function Mainframe3DBackground({
         const lamp = new THREE.Mesh(lampGeo, lampMat);
         lamp.position.set(
           -0.92 + c * spacingX,
-          -1.24 - r * 0.16,
+          -1.28 - r * 0.16,
           0.84
         );
         mainframeGroup.add(lamp);
@@ -354,8 +683,9 @@ export default function Mainframe3DBackground({
     }
     registerLightsRef.current = lights;
 
-    // 9. REAR CABINET DETAILS (Visible during 360-degree rotation)
-    // Rear Inset Panel
+    // ─────────────────────────────────────────────────────────
+    // 9. REAR CABINET DETAILS & STAMPED IBM SPECIFICATION PLATE
+    // ─────────────────────────────────────────────────────────
     const rearPanelGeo = new THREE.BoxGeometry(2.2, 4.02, 0.04);
     const rearPanelMat = new THREE.MeshStandardMaterial({ color: 0x181c24, roughness: 0.4, metalness: 0.7 });
     const rearPanel = new THREE.Mesh(rearPanelGeo, rearPanelMat);
@@ -376,12 +706,26 @@ export default function Mainframe3DBackground({
     tubeGlowLight.position.set(0, 0, -0.65);
     mainframeGroup.add(tubeGlowLight);
 
-    // IBM Specification Plate on Rear
-    const specPlateGeo = new THREE.BoxGeometry(0.8, 0.4, 0.02);
-    const specPlateMat = new THREE.MeshStandardMaterial({ color: 0xd4d4d8, metalness: 0.85, roughness: 0.2 });
-    const specPlate = new THREE.Mesh(specPlateGeo, specPlateMat);
-    specPlate.position.set(0, -1.2, -0.72);
-    mainframeGroup.add(specPlate);
+    // Stamped Aluminum IBM Specification Plate on Rear
+    const specPlateTex = createSpecPlateTexture();
+    createdTextures.push(specPlateTex);
+
+    const specPlateGeo = new THREE.BoxGeometry(0.82, 0.42, 0.02);
+    const specPlateMat = new THREE.MeshStandardMaterial({ color: 0x1e2430, metalness: 0.85, roughness: 0.3 });
+    const specPlateBox = new THREE.Mesh(specPlateGeo, specPlateMat);
+    specPlateBox.position.set(0, -1.2, -0.72);
+    mainframeGroup.add(specPlateBox);
+
+    const specPlateDecalGeo = new THREE.PlaneGeometry(0.80, 0.40);
+    const specPlateDecalMat = new THREE.MeshStandardMaterial({
+      map: specPlateTex,
+      roughness: 0.25,
+      metalness: 0.75
+    });
+    const specPlateDecal = new THREE.Mesh(specPlateDecalGeo, specPlateDecalMat);
+    specPlateDecal.rotation.y = Math.PI; // Face outwards toward the rear
+    specPlateDecal.position.set(0, 0, -0.012);
+    specPlateBox.add(specPlateDecal);
 
     // Heavy Mainframe Floor Cables exiting rear base
     const cableMat = new THREE.MeshStandardMaterial({ color: 0x111317, roughness: 0.7, metalness: 0.2 });
@@ -573,6 +917,7 @@ export default function Mainframe3DBackground({
       window.removeEventListener('pointermove', handlePointerMove);
       window.removeEventListener('pointerup', handlePointerUp);
       window.removeEventListener('resize', handleResize);
+      createdTextures.forEach((tex) => tex.dispose());
       renderer.dispose();
     };
   }, [activeSpiritId, hasMessages]);
@@ -593,37 +938,37 @@ export default function Mainframe3DBackground({
       />
 
       {/* Sleek Floating 3D Control HUD Badge in bottom-right corner */}
-      <div className="absolute bottom-20 right-3 sm:bottom-4 sm:right-4 z-20 flex items-center gap-1.5 px-2.5 py-1.5 rounded-full bg-[#181818]/85 hover:bg-[#222222]/90 backdrop-blur-md border border-[#2a2a2a] text-[#a3a3a3] text-[11px] font-sans shadow-lg transition-all select-none">
+      <div className="absolute bottom-20 right-3 sm:bottom-4 sm:right-4 z-20 flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#141824]/90 hover:bg-[#1e2333]/95 backdrop-blur-md border border-blue-500/30 text-[#cbd5e1] text-[11px] font-sans shadow-xl transition-all select-none">
         <button
           onClick={handleToggleAutoRotate}
-          className="flex items-center gap-1.5 hover:text-white cursor-pointer px-1.5 py-0.5 rounded-full transition-colors"
+          className="flex items-center gap-1.5 hover:text-white cursor-pointer px-1 py-0.5 rounded-full transition-colors"
           title={isAutoRotate ? 'Pause 3D auto-rotation' : 'Start 3D auto-rotation'}
         >
           {isAutoRotate ? (
             <>
-              <RotateCw className="w-3 h-3 text-emerald-400 animate-spin" style={{ animationDuration: '4s' }} />
-              <span className="text-neutral-200">3D Rotating</span>
+              <RotateCw className="w-3.5 h-3.5 text-blue-400 animate-spin" style={{ animationDuration: '4s' }} />
+              <span className="font-semibold tracking-wider text-blue-200">IBM System/360</span>
             </>
           ) : (
             <>
-              <Pause className="w-3 h-3 text-amber-400" />
-              <span>3D Paused</span>
+              <Pause className="w-3.5 h-3.5 text-amber-400" />
+              <span className="font-semibold tracking-wider text-amber-200">IBM Paused</span>
             </>
           )}
         </button>
 
-        <span className="text-[#3a3a3a]">•</span>
+        <span className="text-[#3a4d66]">•</span>
 
         <button
           onClick={handleResetOrientation}
-          className="hover:text-white cursor-pointer px-1 py-0.5 rounded transition-colors"
-          title="Reset 3D Mainframe angle to front center"
+          className="hover:text-blue-300 cursor-pointer px-1 py-0.5 rounded transition-colors"
+          title="Reset IBM Mainframe to front center"
         >
-          <Compass className="w-3 h-3" />
+          <Compass className="w-3.5 h-3.5" />
         </button>
 
-        <span className="hidden sm:inline text-[#555] text-[10px]">
-          (Drag to spin)
+        <span className="hidden sm:inline text-blue-400/60 text-[10px] font-mono">
+          [Drag 360°]
         </span>
       </div>
     </div>

@@ -352,6 +352,7 @@ Séance replaces flat static backgrounds with hardware-accurate **3D WebGL inter
 
 ### 1. Live 3D Mainframe Background (IBM System/360 & 2401 Tape Unit)
 Runs full-bleed in the vast background of the chat chamber:
+- **Glorified IBM Nameplates & Heritage Badges**: Illuminated 8-bar striped IBM header marquee, circular chrome IBM center hubcaps spinning with the tape reels, engraved IBM 2401 read head badge, cast-brass manufacturer plaque, and authentic stamped factory specification plate on the rear casing.
 - **Continuous 3D Turntable Auto-Rotation**: Hypnotic 360° rotation showcasing the front tape deck, side maintenance latches, braided power cables, and rear cooling louvers glowing with warm vacuum tube filaments.
 - **Interactive Drag-to-Orbit**: Click and drag across the dark chamber background to freely rotate and tilt the mainframe in full 3D space.
 - **Floating 3D HUD Control**: Sleek translucent badge in the bottom-right corner to toggle rotation on/off or reset orientation to center front.

@@ -328,6 +328,14 @@ export default function ChatArea({
       {!hasMessages ? (
         /* EMPTY STATE: Centered vertically over the 3D mainframe reels, big heading, composer centered max-width 760px, SMART CHIPS BELOW */
         <div className="flex-1 flex flex-col items-center justify-center px-4 -mt-10 overflow-y-auto relative z-10">
+          {/* Glorified IBM System/360 Heritage Pill */}
+          <div className="flex items-center gap-2 px-3.5 py-1.5 mb-3 rounded-full bg-[#101726]/90 border border-blue-500/30 text-blue-300 text-xs font-mono tracking-wider shadow-lg shadow-blue-950/40 select-none animate-fade-in backdrop-blur-md">
+            <span className="w-2 h-2 rounded-full bg-blue-400 animate-pulse"></span>
+            <span className="font-bold tracking-widest text-blue-200">IBM SYSTEM/360</span>
+            <span className="text-blue-500/60">•</span>
+            <span className="text-[#94a3b8] text-[11px]">1964 ARCHIVAL MONUMENT</span>
+          </div>
+
           {/* Big heading with subtle shadow so it pops cleanly over the 3D mainframe */}
           <h1 className="text-[32px] font-normal text-white text-center tracking-tight mb-8 drop-shadow-[0_4px_16px_rgba(0,0,0,0.8)]">
             What shall we summon?
@@ -414,7 +422,7 @@ export default function ChatArea({
               <div className="flex items-center justify-between text-[11px] text-[#9b9b9b] mt-2 px-2 select-none">
                 <div className="flex items-center gap-1.5">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
-                  <span>Séance Offline Intelligence • {spirit.fullName}</span>
+                  <span>Séance Offline Intelligence • {spirit.fullName} • IBM System/360</span>
                 </div>
                 <span>Session preserved in IndexedDB</span>
               </div>
