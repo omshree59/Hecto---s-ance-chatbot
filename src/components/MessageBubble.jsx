@@ -1,11 +1,12 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import hljs from 'highlight.js';
 import { 
-  Copy, Check, Volume2, RotateCw, Terminal, FileText 
+  Copy, Check, Volume2, VolumeX, RotateCw, Terminal, FileText 
 } from 'lucide-react';
 import { SPIRITS } from '../engine/necromancyEngine';
+import { seanceSpeech } from '../audio/seanceSpeech';
 
 function CodeBlock({ language, code, onOpenPunchcard }) {
   const [copied, setCopied] = useState(false);
@@ -75,10 +76,19 @@ export default function MessageBubble({
   isStreaming = false
 }) {
   const [copiedText, setCopiedText] = useState(false);
-  const [isSpeaking, setIsSpeaking] = useState(false);
+  const [isSpeakingThis, setIsSpeakingThis] = useState(false);
 
   const isUser = message.sender === 'user';
   const spirit = SPIRITS[message.spiritId] || SPIRITS.pli;
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (isSpeakingThis) {
+        seanceSpeech.stopSpeaking();
+      }
+    };
+  }, [isSpeakingThis]);
 
   // Copy entire message text
   const handleCopyMessage = () => {
@@ -87,29 +97,18 @@ export default function MessageBubble({
     setTimeout(() => setCopiedText(false), 2000);
   };
 
-  // Text-to-Speech
+  // Upgraded Persona Text-to-Speech
   const handleSpeak = () => {
-    if (!('speechSynthesis' in window)) return;
-
-    if (isSpeaking) {
-      window.speechSynthesis.cancel();
-      setIsSpeaking(false);
+    if (isSpeakingThis) {
+      seanceSpeech.stopSpeaking();
+      setIsSpeakingThis(false);
       return;
     }
 
-    const cleanText = (message.text || '')
-      .replace(/```[\s\S]*?```/g, '')
-      .replace(/[*_#]/g, '');
-
-    const utterance = new SpeechSynthesisUtterance(cleanText);
-    utterance.rate = 0.95;
-    utterance.pitch = 0.85;
-
-    utterance.onend = () => setIsSpeaking(false);
-    utterance.onerror = () => setIsSpeaking(false);
-
-    setIsSpeaking(true);
-    window.speechSynthesis.speak(utterance);
+    seanceSpeech.speak(message.text, message.spiritId || 'pli', {
+      onStart: () => setIsSpeakingThis(true),
+      onEnd: () => setIsSpeakingThis(false)
+    });
   };
 
   // Parse initial stage direction if text begins with *...*
@@ -141,11 +140,15 @@ export default function MessageBubble({
 
   // Assistant Message: No bubble, plain text, full column width, avatar on left, line-height 1.75, 16px
   return (
-    <div className="flex items-start gap-3.5 group animate-fade-in w-full">
+    <div className={`flex items-start gap-3.5 group animate-fade-in w-full transition-colors rounded-xl p-1 ${
+      isSpeakingThis ? 'bg-amber-500/[0.03]' : ''
+    }`}>
       {/* Avatar */}
       <div className="shrink-0 mt-0.5">
         <div 
-          className="w-7 h-7 rounded-full bg-[#212121] border border-[#2a2a2a] flex items-center justify-center font-bold text-xs shadow-xs"
+          className={`w-7 h-7 rounded-full bg-[#212121] border border-[#2a2a2a] flex items-center justify-center font-bold text-xs shadow-xs transition-transform ${
+            isSpeakingThis ? 'scale-110 ring-2 ring-amber-500/50' : ''
+          }`}
           style={{ color: spirit.accentColor }}
         >
           {spirit.sigil}
@@ -154,7 +157,7 @@ export default function MessageBubble({
 
       {/* Main Content Column */}
       <div className="flex-1 min-w-0 space-y-1.5">
-        {/* Subtle name and era */}
+        {/* Subtle name, era and speaking wave badge */}
         <div className="flex items-center gap-2 text-[#9b9b9b] text-xs">
           <span className="font-semibold text-neutral-300">
             {spirit.name}
@@ -165,6 +168,12 @@ export default function MessageBubble({
           {message.diagnosticCode && (
             <span className="text-[10px] font-mono-code text-emerald-400/90 bg-[#171717] px-1.5 py-0.5 rounded border border-[#2a2a2a]">
               {message.diagnosticCode}
+            </span>
+          )}
+          {isSpeakingThis && (
+            <span className="flex items-center gap-1 text-[11px] text-amber-400 font-mono animate-pulse">
+              <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-ping"></span>
+              CHANTING
             </span>
           )}
         </div>
@@ -328,12 +337,12 @@ export default function MessageBubble({
 
             <button
               onClick={handleSpeak}
-              className={`p-1.5 rounded-[8px] hover:bg-[#212121] transition-colors cursor-pointer ${
-                isSpeaking ? 'text-amber-400' : 'hover:text-white'
+              className={`p-1.5 rounded-[8px] transition-colors cursor-pointer ${
+                isSpeakingThis ? 'bg-amber-500/20 text-amber-300' : 'hover:bg-[#212121] hover:text-white'
               }`}
-              title={isSpeaking ? 'Stop voice' : 'Read aloud'}
+              title={isSpeakingThis ? 'Stop chanting' : 'Chant response aloud'}
             >
-              <Volume2 className="w-3.5 h-3.5" />
+              {isSpeakingThis ? <VolumeX className="w-3.5 h-3.5" /> : <Volume2 className="w-3.5 h-3.5" />}
             </button>
           </div>
         </div>

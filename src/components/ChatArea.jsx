@@ -1,7 +1,7 @@
 import React, { useRef, useEffect, useState } from 'react';
 import { 
   Menu, SquarePen, MoreHorizontal, ChevronDown, Check, 
-  Download, Trash2, Volume2, VolumeX, FileText, Cpu, BookOpen
+  Download, Trash2, Volume2, VolumeX, FileText, Cpu, BookOpen, AudioWaveform
 } from 'lucide-react';
 import MessageBubble from './MessageBubble';
 import InputBar, { DEFAULT_SUGGESTIONS } from './InputBar';
@@ -29,7 +29,8 @@ export default function ChatArea({
   isAudioPlaying,
   onToggleAudio,
   isThinkActive,
-  onToggleThink
+  onToggleThink,
+  onOpenVoiceMode
 }) {
   const messagesEndRef = useRef(null);
   const containerRef = useRef(null);
@@ -162,6 +163,16 @@ export default function ChatArea({
 
         {/* Right: Single icon button for new séance & "..." menu */}
         <div className="flex items-center gap-1">
+          {/* Voice Mode quick launch pill */}
+          <button
+            onClick={onOpenVoiceMode}
+            title="Launch Voice Séance Mode"
+            className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-[12px] bg-[#212121] hover:bg-[#282828] text-emerald-400 hover:text-emerald-300 text-xs font-medium transition-colors cursor-pointer mr-1"
+          >
+            <AudioWaveform className="w-3.5 h-3.5" />
+            <span>Voice Mode</span>
+          </button>
+
           {/* Single new séance icon button */}
           <button
             onClick={onNewSession}
@@ -189,6 +200,17 @@ export default function ChatArea({
                   onClick={() => setIsMoreMenuOpen(false)} 
                 />
                 <div className="absolute right-0 top-full mt-1.5 w-52 bg-[#212121] border border-[#2a2a2a] rounded-[16px] shadow-2xl p-1.5 z-40 space-y-0.5 animate-fade-in text-xs text-[#ECECEC]">
+                  <button
+                    onClick={() => {
+                      setIsMoreMenuOpen(false);
+                      onOpenVoiceMode && onOpenVoiceMode();
+                    }}
+                    className="w-full flex items-center gap-2.5 px-3 py-2 rounded-[10px] hover:bg-[#282828] text-emerald-400 text-left transition-colors cursor-pointer"
+                  >
+                    <AudioWaveform className="w-4 h-4" />
+                    <span>Launch Voice Mode</span>
+                  </button>
+
                   <button
                     onClick={() => {
                       setIsMoreMenuOpen(false);
@@ -278,6 +300,7 @@ export default function ChatArea({
               onOpenPunchcardPrompt={() => onOpenPunchcard && onOpenPunchcard('000010 /* IBM 5081 SYSTEM/360 PUNCHCARD FORM */               SEC00010')}
               isThinkActive={isThinkActive}
               onToggleThink={onToggleThink}
+              onOpenVoiceMode={onOpenVoiceMode}
             />
 
             {/* Suggestion chips BELOW composer, centered, wrapped */}
@@ -341,6 +364,7 @@ export default function ChatArea({
                 onOpenPunchcardPrompt={() => onOpenPunchcard && onOpenPunchcard('000010 /* IBM 5081 SYSTEM/360 PUNCHCARD FORM */               SEC00010')}
                 isThinkActive={isThinkActive}
                 onToggleThink={onToggleThink}
+                onOpenVoiceMode={onOpenVoiceMode}
               />
               <div className="text-center text-[12px] text-[#9b9b9b] mt-2 select-none">
                 Séance • Offline Intelligence • IBM System/360 (1964)

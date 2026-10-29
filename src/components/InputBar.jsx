@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Plus, ArrowUp, AudioWaveform, Mic, Sparkles, FileText, FastForward } from 'lucide-react';
+import { Plus, ArrowUp, AudioWaveform, Mic, MicOff, Sparkles, FileText, FastForward } from 'lucide-react';
+import { seanceSpeech } from '../audio/seanceSpeech';
 
 export const DEFAULT_SUGGESTIONS = [
   { label: 'Unreserved Keywords Paradox', prompt: 'Explain the paradox of having no reserved keywords in PL/I with an example.' },
@@ -17,10 +18,12 @@ export default function InputBar({
   spiritName = 'PL/I Spirit',
   onOpenPunchcardPrompt,
   isThinkActive,
-  onToggleThink
+  onToggleThink,
+  onOpenVoiceMode
 }) {
   const [input, setInput] = useState('');
   const [showPlusMenu, setShowPlusMenu] = useState(false);
+  const [isDictating, setIsDictating] = useState(false);
   const textareaRef = useRef(null);
 
   // Auto-resize textarea up to max 8 lines (~192px)
@@ -35,6 +38,11 @@ export default function InputBar({
     if (e) e.preventDefault();
     if (!input.trim() || disabled) return;
 
+    if (isDictating) {
+      seanceSpeech.stopListening();
+      setIsDictating(false);
+    }
+
     onSendMessage(input.trim());
     setInput('');
     if (textareaRef.current) {
@@ -46,6 +54,39 @@ export default function InputBar({
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       handleSubmit();
+    }
+  };
+
+  // Toggle Live Speech-to-Text Dictation
+  const handleToggleDictation = () => {
+    if (isDictating) {
+      seanceSpeech.stopListening();
+      setIsDictating(false);
+      return;
+    }
+
+    try {
+      seanceSpeech.startListening({
+        onStart: () => setIsDictating(true),
+        onTranscript: ({ final, interim }) => {
+          const spoken = final || interim;
+          if (spoken) {
+            setInput(prev => {
+              // Smoothly append or update input
+              const base = prev.trim();
+              return base ? `${base} ${spoken}` : spoken;
+            });
+          }
+        },
+        onError: (err) => {
+          console.warn('Dictation error:', err);
+          setIsDictating(false);
+        },
+        onEnd: () => setIsDictating(false)
+      });
+    } catch (err) {
+      alert(err.message || 'Speech recognition not supported in this browser.');
+      setIsDictating(false);
     }
   };
 
@@ -85,7 +126,9 @@ export default function InputBar({
       )}
 
       {/* Pill Composer: Height 56px min, radius 28px, bg #212121, no visible border */}
-      <div className="min-h-[56px] rounded-[28px] bg-[#212121] flex items-end px-3 py-2 shadow-sm transition-colors">
+      <div className={`min-h-[56px] rounded-[28px] bg-[#212121] flex items-end px-3 py-2 shadow-sm transition-all ${
+        isDictating ? 'ring-1 ring-amber-500/60 bg-[#24221f]' : ''
+      }`}>
         {/* Left: "+" icon button */}
         <button
           type="button"
@@ -103,12 +146,12 @@ export default function InputBar({
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={handleKeyDown}
-          placeholder={`Message ${spiritName}…`}
+          placeholder={isDictating ? 'Listening to your incantation...' : `Message ${spiritName}…`}
           disabled={disabled}
           className="flex-1 bg-transparent border-0 focus:ring-0 text-[#ECECEC] placeholder-[#9b9b9b] text-[16px] leading-[1.6] font-sans resize-none max-h-[192px] py-1.5 px-3 focus:outline-none"
         />
 
-        {/* Right, in exact order: 1. "Think" chip, 2. mic icon, 3. circular send button */}
+        {/* Right, in exact order: 1. "Think" chip, 2. mic icon, 3. circular send / voice mode button */}
         <div className="flex items-center gap-1.5 shrink-0 mb-1">
           {/* 1. "Think" chip */}
           <button
@@ -124,29 +167,21 @@ export default function InputBar({
             Think
           </button>
 
-          {/* 2. Mic icon */}
+          {/* 2. Mic icon: Live Dictation Mode with pulsing feedback */}
           <button
             type="button"
-            onClick={() => {
-              if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
-                const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-                const recognition = new SpeechRecognition();
-                recognition.onresult = (event) => {
-                  const transcript = event.results[0][0].transcript;
-                  setInput(prev => prev + (prev ? ' ' : '') + transcript);
-                };
-                recognition.start();
-              } else {
-                alert('Speech recognition is not supported in this browser.');
-              }
-            }}
-            className="w-8 h-8 rounded-full flex items-center justify-center text-[#9b9b9b] hover:text-white hover:bg-[#2a2a2a] transition-colors cursor-pointer"
-            title="Dictate incantation"
+            onClick={handleToggleDictation}
+            className={`w-8 h-8 rounded-full flex items-center justify-center transition-all cursor-pointer ${
+              isDictating 
+                ? 'bg-amber-500 text-black animate-pulse shadow-md' 
+                : 'text-[#9b9b9b] hover:text-white hover:bg-[#2a2a2a]'
+            }`}
+            title={isDictating ? 'Stop listening' : 'Start voice dictation'}
           >
-            <Mic className="w-4 h-4" />
+            {isDictating ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
           </button>
 
-          {/* 3. Circular send button */}
+          {/* 3. Circular send / Voice Mode button */}
           {isStreaming ? (
             <button
               type="button"
@@ -169,15 +204,12 @@ export default function InputBar({
               <ArrowUp className="w-5 h-5 stroke-[2.5]" />
             </button>
           ) : (
-            /* Blue circle with waveform icon when empty */
+            /* Blue circle with waveform icon when empty: Opens ChatGPT Voice Mode */
             <button
               type="button"
-              onClick={() => {
-                // Focus textarea
-                textareaRef.current?.focus();
-              }}
+              onClick={() => onOpenVoiceMode && onOpenVoiceMode()}
               className="w-8 h-8 rounded-full bg-[#10a37f] text-white hover:bg-[#1a7f64] transition-colors flex items-center justify-center cursor-pointer shadow-xs"
-              title="Voice mode / Start summoning"
+              title="Open Voice Séance Mode"
             >
               <AudioWaveform className="w-4 h-4" />
             </button>
