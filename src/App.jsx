@@ -3,6 +3,7 @@ import Sidebar from './components/Sidebar';
 import ChatArea from './components/ChatArea';
 import PunchcardVisualizer from './components/PunchcardVisualizer';
 import LoreModal from './components/LoreModal';
+import VoiceModeModal from './components/VoiceModeModal';
 import { necromancyEngine, SPIRITS } from './engine/necromancyEngine';
 import { gemmaEngine } from './engine/gemmaEngine';
 import { seanceAudio } from './audio/seanceAudio';
@@ -67,6 +68,7 @@ export default function App() {
   const [punchcardText, setPunchcardText] = useState(null);
   const [isCodexOpen, setIsCodexOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isVoiceModeOpen, setIsVoiceModeOpen] = useState(false);
 
   // Streaming State
   const [isStreaming, setIsStreaming] = useState(false);
@@ -229,7 +231,81 @@ export default function App() {
     seanceAudio.playChime();
   };
 
-  // Send message to spirit (supports regeneration)
+  // Async message dispatcher used by Voice Mode
+  const handleSendMessageAsync = async (text) => {
+    if (!text.trim()) return null;
+
+    const userMessage = {
+      id: 'user-' + Date.now(),
+      sender: 'user',
+      text: text.trim(),
+      timestamp: new Date().toISOString()
+    };
+
+    const isFirst = !activeSession?.messages.some(m => m.sender === 'user');
+    const updatedTitle = isFirst ? text.slice(0, 32).trim() : activeSession.title;
+    const updatedMsgs = [...activeSession.messages, userMessage];
+
+    setSessions(prev => prev.map(s => {
+      if (s.id === activeSessionId) {
+        return {
+          ...s,
+          title: updatedTitle,
+          messages: updatedMsgs
+        };
+      }
+      return s;
+    }));
+
+    if (activeEngineType === 'gemma' && gemmaEngine.isReady) {
+      try {
+        let full = '';
+        await gemmaEngine.generateStream(updatedMsgs, (delta, acc) => {
+          full = acc;
+        });
+        const reply = {
+          id: 'spirit-' + Date.now(),
+          sender: 'spirit',
+          spiritId: activeSpiritId,
+          diagnosticCode: 'GEMMA2B-WEBGPU: NEURAL CHANNEL OPEN',
+          text: full,
+          timestamp: new Date().toISOString()
+        };
+        setSessions(prev => prev.map(s => {
+          if (s.id === activeSessionId) {
+            return { ...s, messages: [...s.messages, reply] };
+          }
+          return s;
+        }));
+        return reply;
+      } catch (e) {
+        console.warn('Gemma fallback in voice mode:', e);
+      }
+    }
+
+    // Instant Engine response
+    const payload = necromancyEngine.generateResponse(text);
+    const spiritReply = {
+      id: 'spirit-' + Date.now(),
+      sender: 'spirit',
+      spiritId: payload.spirit,
+      diagnosticCode: payload.diagnosticCode,
+      punchcardLine: payload.punchcardLine,
+      text: payload.text,
+      timestamp: payload.timestamp
+    };
+
+    setSessions(prev => prev.map(s => {
+      if (s.id === activeSessionId) {
+        return { ...s, messages: [...s.messages, spiritReply] };
+      }
+      return s;
+    }));
+
+    return spiritReply;
+  };
+
+  // Standard chat message submission
   const handleSendMessage = async (text, isRegenerate = false) => {
     if (!text.trim() || isStreaming) return;
 
@@ -317,7 +393,6 @@ export default function App() {
       timestamp: responsePayload.timestamp
     };
 
-    // Instant delivery
     if (manifestSpeed === 'instant') {
       setSessions(prev => prev.map(s => {
         if (s.id === activeSessionId) {
@@ -336,14 +411,12 @@ export default function App() {
     setIsStreaming(true);
     setStreamingMessageData(spiritMessage);
     fullResponseRef.current = spiritMessage;
-    setStreamingText(''); // Initially empty to show pulsing dots typing indicator
+    setStreamingText('');
 
-    // Break text into words/tokens
     const tokens = spiritMessage.text.match(/\S+\s*/g) || [spiritMessage.text];
     const baseInterval = manifestSpeed === 'whisper' ? 45 : 28;
     const tokenInterval = isThinkActive ? baseInterval * 1.5 : baseInterval;
 
-    // Show typing indicator for ~350ms before first token arrives
     initialTypingDelayRef.current = setTimeout(() => {
       let tokenIndex = 0;
       let accumulated = '';
@@ -379,7 +452,6 @@ export default function App() {
     }, 350);
   };
 
-  // Regenerate response
   const handleRegenerate = (msgIndex) => {
     if (isStreaming) return;
     const currentMsgs = activeSession.messages;
@@ -405,7 +477,6 @@ export default function App() {
     handleSendMessage(userPrompt, true);
   };
 
-  // Export séance as markdown file
   const handleExportSession = () => {
     if (!activeSession) return;
     const spirit = SPIRITS[activeSession.spiritId] || SPIRITS.pli;
@@ -496,6 +567,15 @@ export default function App() {
         onToggleAudio={handleToggleAudio}
         isThinkActive={isThinkActive}
         onToggleThink={() => setIsThinkActive(!isThinkActive)}
+        onOpenVoiceMode={() => setIsVoiceModeOpen(true)}
+      />
+
+      {/* ChatGPT-style Voice Séance Mode Modal */}
+      <VoiceModeModal
+        isOpen={isVoiceModeOpen}
+        onClose={() => setIsVoiceModeOpen(false)}
+        activeSpiritId={activeSpiritId}
+        onSendMessageAsync={handleSendMessageAsync}
       />
 
       {/* Interactive Punchcard Modal */}
