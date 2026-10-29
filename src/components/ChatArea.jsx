@@ -2,7 +2,7 @@ import React, { useRef, useEffect, useState } from 'react';
 import { 
   Menu, SquarePen, MoreHorizontal, ChevronDown, Check, 
   Download, Trash2, Volume2, VolumeX, FileText, Cpu, BookOpen, 
-  AudioWaveform, Flame, FileJson
+  AudioWaveform, Flame, FileJson, Box
 } from 'lucide-react';
 import MessageBubble from './MessageBubble';
 import InputBar from './InputBar';
@@ -33,6 +33,7 @@ export default function ChatArea({
   isThinkActive,
   onToggleThink,
   onOpenVoiceMode,
+  onOpen3DChamber,
   candleIntensity = 'Ritual'
 }) {
   const messagesEndRef = useRef(null);
@@ -184,6 +185,16 @@ export default function ChatArea({
 
         {/* Right: Single icon button for new séance & "..." menu */}
         <div className="flex items-center gap-1">
+          {/* 3D Mainframe Chamber quick launch pill */}
+          <button
+            onClick={onOpen3DChamber}
+            title="Launch 3D Mainframe Chamber"
+            className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-[12px] bg-[#212121] hover:bg-[#282828] text-amber-400 hover:text-amber-300 text-xs font-medium transition-colors cursor-pointer mr-0.5"
+          >
+            <Box className="w-3.5 h-3.5" />
+            <span>3D Chamber</span>
+          </button>
+
           {/* Voice Mode quick launch pill */}
           <button
             onClick={onOpenVoiceMode}
@@ -221,6 +232,17 @@ export default function ChatArea({
                   onClick={() => setIsMoreMenuOpen(false)} 
                 />
                 <div className="absolute right-0 top-full mt-1.5 w-56 bg-[#212121] border border-[#2a2a2a] rounded-[16px] shadow-2xl p-1.5 z-40 space-y-0.5 animate-fade-in text-xs text-[#ECECEC]">
+                  <button
+                    onClick={() => {
+                      setIsMoreMenuOpen(false);
+                      onOpen3DChamber && onOpen3DChamber();
+                    }}
+                    className="w-full flex items-center gap-2.5 px-3 py-2 rounded-[10px] hover:bg-[#282828] text-amber-400 text-left transition-colors cursor-pointer"
+                  >
+                    <Box className="w-4 h-4" />
+                    <span>Open 3D Chamber</span>
+                  </button>
+
                   <button
                     onClick={() => {
                       setIsMoreMenuOpen(false);

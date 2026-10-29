@@ -4,6 +4,7 @@ import ChatArea from './components/ChatArea';
 import PunchcardVisualizer from './components/PunchcardVisualizer';
 import LoreModal from './components/LoreModal';
 import VoiceModeModal from './components/VoiceModeModal';
+import Mainframe3DModal from './components/Mainframe3DModal';
 import { necromancyEngine, SPIRITS } from './engine/necromancyEngine';
 import { gemmaEngine } from './engine/gemmaEngine';
 import { seanceAudio } from './audio/seanceAudio';
@@ -42,6 +43,7 @@ export default function App() {
   const [isCodexOpen, setIsCodexOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isVoiceModeOpen, setIsVoiceModeOpen] = useState(false);
+  const [is3DChamberOpen, setIs3DChamberOpen] = useState(false);
 
   // Streaming State
   const [isStreaming, setIsStreaming] = useState(false);
@@ -590,6 +592,7 @@ export default function App() {
         onSelectEngineType={handleSelectEngineType}
         gemmaStatus={gemmaStatus}
         onOpenCodex={() => setIsCodexOpen(true)}
+        onOpen3DChamber={() => setIs3DChamberOpen(true)}
         isOpen={isMobileMenuOpen}
         onCloseMobile={() => setIsMobileMenuOpen(false)}
         onToggleSidebar={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
@@ -615,6 +618,7 @@ export default function App() {
         onExportSession={handleExportSession}
         onOpenPunchcard={(cardLine) => setPunchcardText(cardLine)}
         onOpenCodex={() => setIsCodexOpen(true)}
+        onOpen3DChamber={() => setIs3DChamberOpen(true)}
         onOpenMobileMenu={() => setIsMobileMenuOpen(true)}
         isAudioPlaying={isAudioPlaying}
         onToggleAudio={handleToggleAudio}
@@ -622,6 +626,13 @@ export default function App() {
         onToggleThink={() => setIsThinkActive(!isThinkActive)}
         onOpenVoiceMode={() => setIsVoiceModeOpen(true)}
         candleIntensity={candleIntensity}
+      />
+
+      {/* 3D Interactive Mainframe Chamber Modal */}
+      <Mainframe3DModal
+        isOpen={is3DChamberOpen}
+        onClose={() => setIs3DChamberOpen(false)}
+        activeSpiritId={activeSpiritId}
       />
 
       {/* ChatGPT-style Voice Séance Mode Modal */}
@@ -637,6 +648,7 @@ export default function App() {
         <PunchcardVisualizer
           lineText={punchcardText}
           onClose={() => setPunchcardText(null)}
+          spiritAccentColor={SPIRITS[activeSpiritId]?.accentColor || '#f59e0b'}
         />
       )}
 

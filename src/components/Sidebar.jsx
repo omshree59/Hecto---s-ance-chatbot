@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { 
   SquarePen, Search, PanelLeft, BookOpen, Flame, Volume2, 
   VolumeX, Pin, Trash2, Cpu, ChevronDown, Check, User, X,
-  Pencil, MessageSquare
+  Pencil, MessageSquare, Box
 } from 'lucide-react';
 import { SPIRITS } from '../engine/necromancyEngine';
 import { seanceDB } from '../db/seanceDB';
@@ -30,6 +30,7 @@ export default function Sidebar({
   onSelectEngineType,
   gemmaStatus,
   onOpenCodex,
+  onOpen3DChamber,
   isOpen,
   onCloseMobile,
   onToggleSidebar
@@ -174,7 +175,7 @@ export default function Sidebar({
           </button>
         </div>
 
-        {/* 3. Nav list (Codex, Manifestation & Candles, Sound toggle) */}
+        {/* 3. Nav list (Codex, 3D Chamber, Manifestation & Candles, Sound toggle) */}
         <div className="px-3 space-y-0.5 shrink-0 border-b border-[#242424] pb-2">
           {/* Codex */}
           <button
@@ -183,6 +184,15 @@ export default function Sidebar({
           >
             <BookOpen className="w-4 h-4 text-[#9b9b9b]" />
             <span>Codex</span>
+          </button>
+
+          {/* 3D Mainframe Chamber */}
+          <button
+            onClick={onOpen3DChamber}
+            className="w-full flex items-center gap-2.5 px-3 py-2 rounded-[12px] hover:bg-[#212121] text-[15px] text-amber-400 hover:text-amber-300 transition-colors cursor-pointer"
+          >
+            <Box className="w-4 h-4" />
+            <span>3D Mainframe Chamber</span>
           </button>
 
           {/* Manifestation & Candles */}

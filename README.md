@@ -64,7 +64,7 @@ npm run dev
 - [📊 Feature Comparison](#-feature-comparison)
 - [🛠️ Tech Stack](#️-tech-stack)
 - [🚀 Quickstart & Scripts](#-quickstart--scripts)
-- [🖹 Interactive Punchcard Visualizer](#-interactive-punchcard-visualizer)
+- [🧊 3D Interactive Mainframe Chamber & Punchcard](#-3d-interactive-mainframe-chamber--punchcard)
 - [📜 Historical Codex & Anti-Hallucination Ledger](#-historical-codex--anti-hallucination-ledger)
 - [🔊 Procedural Web Audio Synthesizer](#-procedural-web-audio-synthesizer)
 - [🧱 Adding a New Ancestor](#-adding-a-new-ancestor)
@@ -99,18 +99,18 @@ As modern software development abstracts into microservices, virtual DOMs, and c
       <sub>Pure black (#000000) canvas, #171717 sidebar, auto-growing composer pill, and hover message actions.</sub>
     </td>
     <td width="50%" align="center">
-      <b>🖹 80-Column Hollerith Punchcard Reader</b><br />
-      <sub>Inspect any generated code or transmission as a real-time IBM 5081 rectangular punchcard matrix.</sub>
+      <b>🧊 3D Mainframe Chamber (Three.js)</b><br />
+      <sub>Interactive real-time 3D IBM System/360 & 2401 Tape Unit with spinning reels, vacuum loops, and EPO switch.</sub>
     </td>
   </tr>
   <tr>
     <td width="50%" align="center">
-      <b>🎙️ Full-Screen Voice Séance Mode</b><br />
-      <sub>Hands-free conversational mode featuring continuous STT dictation and persona-specific acoustic TTS.</sub>
+      <b>🖹 3D WebGL Hollerith Punchcard</b><br />
+      <sub>Inspect code on a 3D physical cardboard card with real holes, 360° orbit, holographic laser scan, and hopper feed.</sub>
     </td>
     <td width="50%" align="center">
-      <b>📜 The Grimoire Codex & Fact-Checker</b><br />
-      <sub>Cross-referenced historical specs from IBM Technical Reports, ACM digital archives, and IEEE annals.</sub>
+      <b>🎙️ Hands-Free Voice Séance & Codex</b><br />
+      <sub>Voice dictation loop, custom pitch/cadence TTS, and verified historical specs combating AI hallucinations.</sub>
     </td>
   </tr>
 </table>
@@ -310,6 +310,7 @@ dev5/
 ├── Styling & Fonts    Tailwind CSS 4.3.3  •  Inter  •  Fira Code  •  Cinzel
 ├── Neural AI Runtime  @mlc-ai/web-llm 0.2.86 (WebGPU Client Inference)
 ├── Markdown & Code    react-markdown 10.1.0  •  remark-gfm 4.0.1  •  highlight.js 11.12.0
+├── 3D WebGL Graphics  Three.js (WebGL Hardware-Accelerated 3D Models & Shaders)
 ├── Audio & Speech     Web Audio API (Procedural Oscillators)  •  Web Speech API
 ├── Local Database     IndexedDB API (Database: SeanceChatDB, Store: sessions)
 └── Quality & Linter   Oxlint 1.89.0
@@ -345,9 +346,24 @@ npm run lint
 
 ---
 
-## 🖹 Interactive Punchcard Visualizer
+## 🧊 3D Interactive Mainframe Chamber & Punchcard
 
-Séance features a full simulator of the legendary **IBM 5081 standard 80-column punchcard**. Every code sample generated in chat includes a `Card: ...` inspection button.
+Séance elevates retrocomputing beyond 2D text by delivering hardware-accurate **3D WebGL interactive models** rendered with Three.js directly in the browser:
+
+### 1. Interactive 3D IBM 5081 Hollerith Punchcard Simulator
+Every code transmission includes a `Card: ...` inspection button that opens an authentic **3D physical cardboard card**:
+- **Real-Time 3D Card Physics**: Cardboard thickness, authentic corner cut (top-left 45°), and transparent rectangular cutouts where holes are punched.
+- **360° Free Orbit**: Drag to rotate, tilt, or flip the card to inspect the unprinted back.
+- **Holographic Laser Scan**: Triggers an optical laser sweep across columns 1 to 80 that decodes the Hollerith matrix.
+- **Hopper Feed Animation**: Feeds the card down into the IBM 2540 Card Reader tray with mechanical sound effects.
+
+### 2. Interactive 3D Mainframe Chamber (IBM System/360 & 2401 Tape Unit)
+Click **`3D Chamber`** in the top bar or sidebar to enter the virtual mainframe computer room:
+- **Dual Rotating Magnetic Tape Reels**: Interactive Supply and Take-up reels spinning at authentic speeds (112.5 IPS to 225 IPS).
+- **Vacuum Column Buffer Tubes**: Animated tape loops fluttering inside acrylic-tinted chambers.
+- **32-Bit Register Display Panel**: Incandescent pilot lights reflecting Program Status Word (`PSW`) and channel activity that react to user interaction.
+- **Emergency Power Off (EPO) Pull Switch**: Pull the red emergency circuit breaker switch to simulate a power trip with authentic breaker-snap acoustics!
+- **Ethereal Ectoplasmic Particles**: 3D particle vortex floating around the cabinet matching the active ancestor's accent color.
 
 ```
        0         1         2         3         4         5         6         7         
