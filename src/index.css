@@ -1,0 +1,151 @@
+@import "tailwindcss";
+@import "highlight.js/styles/atom-one-dark.css";
+
+@layer base {
+  :root {
+    --font-sans: 'Inter', system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    --font-mono: 'Fira Code', 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    --font-cinzel: 'Cinzel', serif;
+  }
+
+  body {
+    font-family: var(--font-sans);
+    background-color: #212121;
+    color: #ECECEC;
+    font-size: 16px;
+    line-height: 1.7;
+    letter-spacing: -0.01em;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  strong, b {
+    font-weight: 600;
+  }
+}
+
+.font-cinzel {
+  font-family: 'Cinzel', serif;
+}
+
+.font-mono-code {
+  font-family: var(--font-mono);
+}
+
+/* Custom Highlight.js overrides for dark atom-one-dark card */
+pre code.hljs {
+  padding: 0;
+  background: transparent;
+  font-family: var(--font-mono);
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+/* ChatGPT Style Smooth Scrollbars */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.25);
+}
+
+/* Candle Flame Animations */
+@keyframes flicker {
+  0%, 100% {
+    transform: scale(1) rotate(-1deg);
+    opacity: 0.95;
+    filter: drop-shadow(0 0 10px rgba(245, 158, 11, 0.8));
+  }
+  25% {
+    transform: scale(1.04) rotate(1.5deg);
+    opacity: 0.85;
+    filter: drop-shadow(0 0 16px rgba(251, 191, 36, 0.9));
+  }
+  50% {
+    transform: scale(0.96) rotate(-2deg);
+    opacity: 0.92;
+    filter: drop-shadow(0 0 8px rgba(217, 119, 6, 0.7));
+  }
+  75% {
+    transform: scale(1.05) rotate(1deg);
+    opacity: 1;
+    filter: drop-shadow(0 0 18px rgba(251, 191, 36, 1));
+  }
+}
+
+.animate-candle-flame {
+  animation: flicker 2.4s infinite ease-in-out;
+  transform-origin: bottom center;
+}
+
+/* Blinking Cursor for Streaming */
+@keyframes cursor-blink {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0;
+  }
+}
+
+.animate-blinking-cursor {
+  animation: cursor-blink 0.9s infinite ease-in-out;
+}
+
+/* Pulsing Dots for Typing Indicator */
+@keyframes typing-pulse {
+  0%, 100% {
+    opacity: 0.25;
+    transform: scale(0.8);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.1);
+  }
+}
+
+.typing-dot {
+  animation: typing-pulse 1.3s infinite ease-in-out;
+}
+
+.typing-dot:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.typing-dot:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+@keyframes rune-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-rune-spin-slow {
+  animation: rune-spin 80s linear infinite;
+}
+
+/* Accessibility: Respect prefers-reduced-motion */
+@media (prefers-reduced-motion: reduce) {
+  *, ::before, ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
