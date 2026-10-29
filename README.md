@@ -64,8 +64,8 @@ npm run dev
 - [📊 Feature Comparison](#-feature-comparison)
 - [🛠️ Tech Stack](#️-tech-stack)
 - [🚀 Quickstart & Scripts](#-quickstart--scripts)
-- [🧊 3D Interactive Mainframe Chamber & Punchcard](#-3d-interactive-mainframe-chamber--punchcard)
-- [📜 Historical Codex & Anti-Hallucination Ledger](#-historical-codex--anti-hallucination-ledger)
+- [🧊 3D Mainframe Background & Punchcard](#-3d-mainframe-background--punchcard)
+- [📜 Historical Lore & Anti-Hallucination Ledger](#-historical-lore--anti-hallucination-ledger)
 - [🔊 Procedural Web Audio Synthesizer](#-procedural-web-audio-synthesizer)
 - [🧱 Adding a New Ancestor](#-adding-a-new-ancestor)
 - [⚙️ Configuration Constants](#️-configuration-constants)
@@ -346,24 +346,24 @@ npm run lint
 
 ---
 
-## 🧊 3D Interactive Mainframe Chamber & Punchcard
+## 🧊 3D Mainframe Background & Punchcard
 
-Séance elevates retrocomputing beyond 2D text by delivering hardware-accurate **3D WebGL interactive models** rendered with Three.js directly in the browser:
+Séance replaces flat static backgrounds with hardware-accurate **3D WebGL interactive models** rendered with Three.js directly in the browser:
 
-### 1. Interactive 3D IBM 5081 Hollerith Punchcard Simulator
+### 1. Live 3D Mainframe Background (IBM System/360 & 2401 Tape Unit)
+Runs full-bleed in the vast background of the chat chamber:
+- **Dual Rotating Magnetic Tape Reels**: Interactive Supply and Take-up reels spinning at authentic speeds, dynamically accelerating when the spirit streams tokens or speaks!
+- **Vacuum Column Buffer Tubes**: Animated tape loops fluttering inside acrylic-tinted chambers.
+- **32-Bit Register Display Panel**: Incandescent pilot lights reflecting Program Status Word (`PSW`) and channel activity that cycle in real time.
+- **Subtle Mouse Parallax**: Gentle camera perspective tilt responding smoothly to cursor position.
+- **Ethereal Ectoplasmic Embers**: 3D particle vortex floating around the mainframe cabinet matching the active ancestor's accent color.
+
+### 2. Interactive 3D IBM 5081 Hollerith Punchcard Simulator
 Every code transmission includes a `Card: ...` inspection button that opens an authentic **3D physical cardboard card**:
 - **Real-Time 3D Card Physics**: Cardboard thickness, authentic corner cut (top-left 45°), and transparent rectangular cutouts where holes are punched.
 - **360° Free Orbit**: Drag to rotate, tilt, or flip the card to inspect the unprinted back.
 - **Holographic Laser Scan**: Triggers an optical laser sweep across columns 1 to 80 that decodes the Hollerith matrix.
 - **Hopper Feed Animation**: Feeds the card down into the IBM 2540 Card Reader tray with mechanical sound effects.
-
-### 2. Interactive 3D Mainframe Chamber (IBM System/360 & 2401 Tape Unit)
-Click **`3D Chamber`** in the top bar or sidebar to enter the virtual mainframe computer room:
-- **Dual Rotating Magnetic Tape Reels**: Interactive Supply and Take-up reels spinning at authentic speeds (112.5 IPS to 225 IPS).
-- **Vacuum Column Buffer Tubes**: Animated tape loops fluttering inside acrylic-tinted chambers.
-- **32-Bit Register Display Panel**: Incandescent pilot lights reflecting Program Status Word (`PSW`) and channel activity that react to user interaction.
-- **Emergency Power Off (EPO) Pull Switch**: Pull the red emergency circuit breaker switch to simulate a power trip with authentic breaker-snap acoustics!
-- **Ethereal Ectoplasmic Particles**: 3D particle vortex floating around the cabinet matching the active ancestor's accent color.
 
 ```
        0         1         2         3         4         5         6         7         
@@ -385,7 +385,7 @@ Row 3  │                                                                      
 
 ---
 
-## 📜 Historical Codex & Anti-Hallucination Ledger
+## 📜 Historical Lore & Anti-Hallucination Ledger
 
 Small 2B models can inadvertently conflate historical timelines. The **Grimoire Codex** contains verified primary-source records directly accessible in the UI:
 

@@ -2,10 +2,11 @@ import React, { useRef, useEffect, useState } from 'react';
 import { 
   Menu, SquarePen, MoreHorizontal, ChevronDown, Check, 
   Download, Trash2, Volume2, VolumeX, FileText, Cpu, BookOpen, 
-  AudioWaveform, Flame, FileJson, Box
+  AudioWaveform, Flame, FileJson
 } from 'lucide-react';
 import MessageBubble from './MessageBubble';
 import InputBar from './InputBar';
+import Mainframe3DBackground from './Mainframe3DBackground';
 import { SPIRITS, getDynamicSuggestions } from '../engine/necromancyEngine';
 
 export default function ChatArea({
@@ -33,7 +34,6 @@ export default function ChatArea({
   isThinkActive,
   onToggleThink,
   onOpenVoiceMode,
-  onOpen3DChamber,
   candleIntensity = 'Ritual'
 }) {
   const messagesEndRef = useRef(null);
@@ -72,9 +72,16 @@ export default function ChatArea({
   }[candleIntensity] || 'opacity-80 animate-flicker';
 
   return (
-    <main className="flex-1 flex flex-col h-screen bg-[#000000] overflow-hidden relative text-[#ECECEC]">
-      {/* TOP BAR: persona name + model dropdown on left, subtle candle flicker, single new séance button & "..." menu on right */}
-      <header className="h-14 px-4 bg-transparent flex items-center justify-between shrink-0 z-20">
+    <main className="flex-1 flex flex-col h-screen bg-[#030304] overflow-hidden relative text-[#ECECEC]">
+      {/* 3D Mainframe & Séance Chamber Background (runs full-bleed in the vast background) */}
+      <Mainframe3DBackground
+        activeSpiritId={activeSpiritId}
+        isStreaming={isStreaming}
+        hasMessages={hasMessages}
+      />
+
+      {/* TOP BAR: persona name + model dropdown on left, subtle candle flicker, Voice Mode, single new séance button & "..." menu on right */}
+      <header className="h-14 px-4 bg-transparent flex items-center justify-between shrink-0 relative z-20">
         {/* Left: Mobile Drawer Trigger & Model / Persona Dropdown (ChatGPT style) */}
         <div className="flex items-center gap-1.5">
           <button
@@ -89,7 +96,7 @@ export default function ChatArea({
           <div className="relative">
             <button
               onClick={() => setIsModelDropdownOpen(!isModelDropdownOpen)}
-              className="flex items-center gap-2 px-3 py-1.5 rounded-[12px] hover:bg-[#212121] text-white text-[18px] font-semibold transition-colors cursor-pointer select-none"
+              className="flex items-center gap-2 px-3 py-1.5 rounded-[12px] hover:bg-[#212121]/80 backdrop-blur-xs text-white text-[18px] font-semibold transition-colors cursor-pointer select-none"
             >
               {/* Subtle Candle Flicker in the Header */}
               <div className="relative flex items-center justify-center">
@@ -183,23 +190,13 @@ export default function ChatArea({
           </div>
         </div>
 
-        {/* Right: Single icon button for new séance & "..." menu */}
+        {/* Right: Voice Mode, Single icon button for new séance & "..." menu */}
         <div className="flex items-center gap-1">
-          {/* 3D Mainframe Chamber quick launch pill */}
-          <button
-            onClick={onOpen3DChamber}
-            title="Launch 3D Mainframe Chamber"
-            className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-[12px] bg-[#212121] hover:bg-[#282828] text-amber-400 hover:text-amber-300 text-xs font-medium transition-colors cursor-pointer mr-0.5"
-          >
-            <Box className="w-3.5 h-3.5" />
-            <span>3D Chamber</span>
-          </button>
-
           {/* Voice Mode quick launch pill */}
           <button
             onClick={onOpenVoiceMode}
             title="Launch Voice Séance Mode"
-            className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-[12px] bg-[#212121] hover:bg-[#282828] text-emerald-400 hover:text-emerald-300 text-xs font-medium transition-colors cursor-pointer mr-1"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-[12px] bg-[#212121]/90 hover:bg-[#282828] text-emerald-400 hover:text-emerald-300 text-xs font-medium transition-colors cursor-pointer mr-1 backdrop-blur-xs border border-emerald-500/20"
           >
             <AudioWaveform className="w-3.5 h-3.5" />
             <span>Voice Mode</span>
@@ -209,7 +206,7 @@ export default function ChatArea({
           <button
             onClick={onNewSession}
             title="New séance"
-            className="p-2 rounded-[12px] hover:bg-[#212121] text-[#9b9b9b] hover:text-white transition-colors cursor-pointer"
+            className="p-2 rounded-[12px] hover:bg-[#212121]/80 backdrop-blur-xs text-[#9b9b9b] hover:text-white transition-colors cursor-pointer"
           >
             <SquarePen className="w-5 h-5" />
           </button>
@@ -219,7 +216,7 @@ export default function ChatArea({
             <button
               onClick={() => setIsMoreMenuOpen(!isMoreMenuOpen)}
               title="More options"
-              className="p-2 rounded-[12px] hover:bg-[#212121] text-[#9b9b9b] hover:text-white transition-colors cursor-pointer"
+              className="p-2 rounded-[12px] hover:bg-[#212121]/80 backdrop-blur-xs text-[#9b9b9b] hover:text-white transition-colors cursor-pointer"
             >
               <MoreHorizontal className="w-5 h-5" />
             </button>
@@ -232,17 +229,6 @@ export default function ChatArea({
                   onClick={() => setIsMoreMenuOpen(false)} 
                 />
                 <div className="absolute right-0 top-full mt-1.5 w-56 bg-[#212121] border border-[#2a2a2a] rounded-[16px] shadow-2xl p-1.5 z-40 space-y-0.5 animate-fade-in text-xs text-[#ECECEC]">
-                  <button
-                    onClick={() => {
-                      setIsMoreMenuOpen(false);
-                      onOpen3DChamber && onOpen3DChamber();
-                    }}
-                    className="w-full flex items-center gap-2.5 px-3 py-2 rounded-[10px] hover:bg-[#282828] text-amber-400 text-left transition-colors cursor-pointer"
-                  >
-                    <Box className="w-4 h-4" />
-                    <span>Open 3D Chamber</span>
-                  </button>
-
                   <button
                     onClick={() => {
                       setIsMoreMenuOpen(false);
@@ -306,6 +292,7 @@ export default function ChatArea({
                     <span>Inspect Punchcard</span>
                   </button>
 
+                  {/* Historical Lore (formerly Codex) */}
                   <button
                     onClick={() => {
                       setIsMoreMenuOpen(false);
@@ -314,7 +301,7 @@ export default function ChatArea({
                     className="w-full flex items-center gap-2.5 px-3 py-2 rounded-[10px] hover:bg-[#282828] text-left transition-colors cursor-pointer"
                   >
                     <BookOpen className="w-4 h-4 text-[#9b9b9b]" />
-                    <span>Open Codex</span>
+                    <span>Historical Lore</span>
                   </button>
 
                   <div className="border-t border-[#2a2a2a] my-1"></div>
@@ -337,17 +324,17 @@ export default function ChatArea({
         </div>
       </header>
 
-      {/* Main Content Area */}
+      {/* Main Content Area (Relative z-10 layered cleanly over 3D background) */}
       {!hasMessages ? (
-        /* EMPTY STATE: Centered vertically, big heading, composer centered max-width 760px, SMART CHIPS BELOW */
-        <div className="flex-1 flex flex-col items-center justify-center px-4 -mt-10 overflow-y-auto">
-          {/* Big heading (32px, regular weight) */}
-          <h1 className="text-[32px] font-normal text-white text-center tracking-tight mb-8">
+        /* EMPTY STATE: Centered vertically over the 3D mainframe reels, big heading, composer centered max-width 760px, SMART CHIPS BELOW */
+        <div className="flex-1 flex flex-col items-center justify-center px-4 -mt-10 overflow-y-auto relative z-10">
+          {/* Big heading with subtle shadow so it pops cleanly over the 3D mainframe */}
+          <h1 className="text-[32px] font-normal text-white text-center tracking-tight mb-8 drop-shadow-[0_4px_16px_rgba(0,0,0,0.8)]">
             What shall we summon?
           </h1>
 
           {/* Composer centered at max-width 760px */}
-          <div className="w-full max-w-[760px]">
+          <div className="w-full max-w-[760px] drop-shadow-[0_8px_30px_rgba(0,0,0,0.6)]">
             <InputBar
               onSendMessage={onSendMessage}
               isStreaming={isStreaming}
@@ -366,7 +353,7 @@ export default function ChatArea({
                 <button
                   key={idx}
                   onClick={() => onSendMessage(suggestion.prompt)}
-                  className="px-3.5 py-1.5 rounded-full bg-[#212121] hover:bg-[#282828] text-[#ECECEC] text-[13px] font-sans transition-colors cursor-pointer border border-[#2a2a2a] shadow-xs hover:border-neutral-600"
+                  className="px-3.5 py-1.5 rounded-full bg-[#212121]/90 hover:bg-[#282828] backdrop-blur-md text-[#ECECEC] text-[13px] font-sans transition-colors cursor-pointer border border-[#2a2a2a] shadow-md hover:border-neutral-500"
                 >
                   {suggestion.label}
                 </button>
@@ -375,8 +362,8 @@ export default function ChatArea({
           </div>
         </div>
       ) : (
-        /* ACTIVE CHAT: Messages stream max-width 760px, composer docked at bottom */
-        <div className="flex-1 flex flex-col overflow-hidden">
+        /* ACTIVE CHAT: Messages stream max-width 760px, composer docked at bottom, relative z-10 over 3D background */
+        <div className="flex-1 flex flex-col overflow-hidden relative z-10">
           {/* Messages Column */}
           <div 
             ref={containerRef}
@@ -412,7 +399,7 @@ export default function ChatArea({
 
           {/* Docked Composer at bottom */}
           <div className="w-full px-4 pb-3 shrink-0">
-            <div className="max-w-[760px] mx-auto w-full">
+            <div className="max-w-[760px] mx-auto w-full drop-shadow-[0_8px_30px_rgba(0,0,0,0.7)]">
               <InputBar
                 onSendMessage={onSendMessage}
                 isStreaming={isStreaming}

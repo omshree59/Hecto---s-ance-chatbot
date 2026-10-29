@@ -174,10 +174,10 @@ export default function LoreModal({ onClose, onSelectSpirit }) {
             <BookOpen className="w-5 h-5 text-amber-400" />
             <div>
               <h2 className="text-base font-semibold text-white">
-                The Grimoire of Dead Languages & Codex
+                Historical Lore & Ancestral Fact-Checker
               </h2>
               <p className="text-xs text-neutral-400">
-                A historical and architectural record of silicon ancestors with verified facts
+                A verified historical and architectural record of silicon ancestors with accuracy ledger
               </p>
             </div>
           </div>
