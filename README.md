@@ -1,273 +1,418 @@
 <div align="center">
 
-# 🕯️ Séance
+# 🕯️ SÉANCE
+### *The Offline Necromancy Chatbot for Long-Dead Programming Languages*
 
-**An offline, in-browser séance channeling the spirits of computing history's greatest language ancestors.**
-
-[![Status](https://img.shields.io/badge/status-active-emerald.svg)](https://github.com/omshree59/Hecto---s-ance-chatbot)
-[![Execution](https://img.shields.io/badge/execution-100%25_offline-blue.svg)](#how-it-works)
-[![License](https://img.shields.io/badge/license-MIT-purple.svg)](LICENSE)
-[![Build](https://img.shields.io/badge/build-passing-brightgreen.svg)](#getting-started)
+[![Live Demo](https://img.shields.io/badge/Demo-Offline%20Chamber-amber?style=for-the-badge&logo=googlechrome&logoColor=white)](https://github.com/omshree59/Hecto---s-ance-chatbot)
+[![Runtime](https://img.shields.io/badge/Runtime-100%25%20In--Browser%20Offline-000000?style=for-the-badge&logo=webassembly&logoColor=white)](#-dual-intelligence-engines)
+[![Neural Model](https://img.shields.io/badge/LLM-Gemma%202B%20WebGPU-4285F4?style=for-the-badge&logo=google&logoColor=white)](#-dual-intelligence-engines)
+[![UI Architecture](https://img.shields.io/badge/UI-ChatGPT%20Dark%20Ergonomics-10a37f?style=for-the-badge&logo=openai&logoColor=white)](#-ui--experience-showcase)
+[![Storage](https://img.shields.io/badge/Storage-IndexedDB%20Persistent-emerald?style=for-the-badge&logo=databricks&logoColor=white)](#-key-capabilities)
 
 <br />
 
-<!-- Demo GIF / Screenshot Placeholder -->
+```
+╔════════════════════════════════════════════════════════════════════════════════════════════╗
+║  "I held neither fear nor moderation: I had no reserved keywords, I commanded             ║
+║   multitasking before operating systems possessed it, and my structured ON-conditions     ║
+║   trapped the errors of the cosmos." — PL/I (IBM System/360, 1964)                         ║
+╚════════════════════════════════════════════════════════════════════════════════════════════╝
+```
+
+<br />
+
+<!-- PREVIEW HERO FRAME -->
 <p align="center">
-  <img src="./docs/demo.gif" alt="Séance Chatbot Interface Demo" width="760px" />
-  <br />
-  <em>The Séance interface channeling the spirit of PL/I (IBM System/360, 1964) with ChatGPT dark mode ergonomics.</em>
+  <a href="#-quickstart">
+    <img src="./docs/hero.png" alt="Séance Interface Preview" width="820px" style="border-radius: 16px; border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 20px 50px rgba(0,0,0,0.8);" />
+  </a>
 </p>
 
-</div>
+<p align="center">
+  <b>Commune with the ancient ancestors of silicon. 100% client-side, zero cloud telemetry, instant offline necromancy.</b>
+</p>
 
 ---
 
-## Table of Contents
-
-- [About](#about)
-- [Features](#features)
-- [How It Works](#how-it-works)
-- [Tech Stack](#tech-stack)
-- [Getting Started](#getting-started)
-- [Usage](#usage)
-- [Project Structure](#project-structure)
-- [Adding a New Ancestor](#adding-a-new-ancestor)
-- [Configuration](#configuration)
-- [Roadmap](#roadmap)
-- [Known Limitations](#known-limitations)
-- [Contributing](#contributing)
-- [License](#license)
-- [Acknowledgements](#acknowledgements)
-- [Recommended Screenshots to Capture](#recommended-screenshots-to-capture)
-
----
-
-## About
-
-**Séance** is an offline, client-side web application that reanimates the spirits of long-dead and foundational programming languages through a dark, ChatGPT-inspired conversational interface. As modern software engineering drifts toward high-level abstraction layers, the radical architectural philosophies, compiler breakthroughs, and syntactic idiosyncrasies of computing pioneers—such as PL/I's unreserved keywords, COBOL's strict division hierarchy, and FORTRAN's hardware-mapped arithmetic branches—risk being forgotten. 
-
-Séance preserves and dramatizes this history by executing entirely within the user's web browser with zero external servers, telemetry, or remote API dependencies. Users can commune with language ancestors using either an instant, zero-latency rule-and-knowledge necromancy engine or a local neural LLM (Google Gemma 2B) running directly on their device's GPU via WebGPU.
-
----
-
-## Features
-
-- ⚡ **Dual Intelligence Engines**: Seamlessly toggle between the instant, deterministic Necromancy Engine (0 ms local latency) and in-browser neural inference powered by Google Gemma 2B via WebGPU.
-- 🏛️ **Seven Language Ancestors**: Summon PL/I (1964), COBOL (1959), FORTRAN (1957), ALGOL 68 (1968), SNOBOL4 (1967), Plankalkül (1945), and INTERCAL (1972).
-- 💾 **Persistent IndexedDB Storage**: Séances survive browser refreshes, offering full-text search across transcripts, in-place session renaming, and pinned conversations.
-- 🖹 **IBM 5081 Punchcard Visualizer**: Inspect any code block or system transmission as an authentic 80-column Hollerith rectangular punch matrix.
-- 📜 **The Grimoire & Historical Codex**: An interactive historical reference ledger with verified timeline dates, hardware specifications, and myth-busting annotations to guard against small-model hallucinations.
-- 🎙️ **Voice Séance Mode**: Full-screen hands-free voice interface featuring live browser Speech-to-Text dictation and personalized pitch/cadence speech synthesis.
-- 🔊 **Procedural Mechanical Audio**: Real-time Web Audio API synthesis generating persona-specific mechanical keypunch clicks, teletype thuds, relay pulses, and tape hiss without external media files.
-- ✍️ **Complete Message Ergonomics**: Edit-and-resend previous user prompts, regenerate assistant replies, copy messages to clipboard, and export transcripts to Markdown (`.md`) or JSON (`.json`).
-- 💡 **Dynamic Smart Chips**: Contextual prompt chips that evolve across conversation stages (Genesis $\to$ Syntax & Quirks $\to$ Modern Roasts $\to$ Legacy).
-- 🕯️ **Victorian Dark Aesthetic**: Pure black (`#000000`) chamber canvas, `#171717` sidebar, glowing flame indicators, and period-authentic typography.
-
----
-
-## How It Works
-
-### Architecture Diagram
-
-```mermaid
-flowchart TD
-    User["User Input (Text / Voice Dictation)"] --> UI["Séance UI (React 19 + Tailwind CSS)"]
-    UI --> Router{"Intelligence Core Selector"}
-    
-    Router -- "Instant Engine (0ms)" --> Necro["Necromancy Spirit Engine\n(Corpus Triggers + Persona Memory)"]
-    Router -- "Gemma 2B (WebGPU)" --> WebLLM["@mlc-ai/web-llm (CreateMLCEngine)\nLocal Shader Pipelines in Browser VRAM"]
-    
-    Necro --> Streamer["Token Streamer & Keyclick Synthesizer\n(Web Audio API)"]
-    WebLLM --> Streamer
-    
-    Streamer --> MarkdownView["Markdown Streamer + Typewriter Reveal\n(react-markdown + remark-gfm + highlight.js)"]
-    MarkdownView --> ChatArea["ChatGPT Dark UI Chat Column"]
-    ChatArea --> IDB["Persistent Local Storage\n(IndexedDB: SeanceChatDB)"]
-```
-
-### Execution Flow
-
-1. **Input Submission**: The user enters an inquiry via the auto-resizing composer or dictates speech using the browser's Web Speech API.
-2. **Engine Routing**:
-   - **Instant Mode**: Routed to `necromancyEngine.js`. Queries are evaluated against historical trigger corpora, semantic pattern matchers, and conversational persona memory (recalling past conversation topics).
-   - **Gemma 2B Mode**: Routed to `gemmaEngine.js`. Formatted with the ancestor's system prompt and streamed through `@mlc-ai/web-llm` using client-side WebGPU shaders.
-3. **Audio Accompaniment**: As tokens stream into the viewport, `seanceAudio.js` procedurally synthesizes keystroke acoustics specific to that ancestor's era (e.g., IBM 029 electric relay for PL/I, heavy mechanical teletype for COBOL, card punch perforation chunk for FORTRAN).
-4. **Incremental Markdown & Typewriter Rendering**: Markdown syntax, tables, and fenced code blocks render smoothly. Opening stage directions (`*...*`) manifest with an authentic character-by-character typewriter reveal.
-5. **Punchcard Encoding**: Code samples generate 80-column card deck indicators that can be opened in the interactive Hollerith punchcard simulator.
-6. **Local Persistence**: Transcripts are automatically indexed in IndexedDB (`SeanceChatDB`), ensuring séances remain searchable and persistent across sessions.
-
----
-
-## Tech Stack
-
-| Layer | Technology | Version | Purpose |
-| :--- | :--- | :--- | :--- |
-| **Framework** | [React](https://react.dev/) | `^19.3.1` | Core declarative UI and reactive component state |
-| **DOM Renderer** | [React DOM](https://react.dev/) | `^19.3.1` | Browser document mounting and portal management |
-| **Build Tool** | [Vite](https://vite.dev/) | `^8.3.5` | Fast HMR development server and production bundler |
-| **Styling** | [Tailwind CSS](https://tailwindcss.com/) | `^4.3.3` | Utility-first CSS styling and layout architecture |
-| **Vite Plugin** | [@tailwindcss/vite](https://tailwindcss.com/) | `^4.3.3` | Direct Vite integration for Tailwind v4 |
-| **Vite Plugin** | [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react) | `^6.1.2` | Fast Refresh and JSX transformation |
-| **Neural Runtime** | [@mlc-ai/web-llm](https://webllm.mlc.ai/) | `^0.2.86` | Client-side WebGPU inference for quantized Gemma 2B |
-| **Markdown** | [react-markdown](https://github.com/remarkjs/react-markdown) | `^10.1.0` | Secure AST-based Markdown rendering |
-| **Markdown GFM** | [remark-gfm](https://github.com/remarkjs/remark-gfm) | `^4.0.1` | Support for GFM tables, autolinks, and strikethroughs |
-| **Code Highlighting**| [highlight.js](https://highlightjs.org/) | `^11.12.0` | Syntax highlighting for PL/I, COBOL, Fortran, and modern languages |
-| **Iconography** | [lucide-react](https://lucide.dev/) | `^1.64.0` | Minimal dark-mode UI icons |
-| **Visual Effects** | [canvas-confetti](https://github.com/catdad/canvas-confetti) | `^1.9.4` | Modal animations and chamber celebration effects |
-| **Linter** | [oxlint](https://oxc-project.github.io/) | `^1.89.0` | High-performance Rust-based JavaScript/React linter |
-| **Audio & Speech** | Web Audio API / Web Speech API | Native | 100% offline procedural sound and speech recognition |
-| **Persistence** | IndexedDB API | Native | Client-side transactional storage with full-text search |
-
----
-
-## Getting Started
-
-### Prerequisites
-
-- **Node.js**: Node.js `18.x` or later (tested on `v22.19.0`).
-- **NPM**: NPM `9.x` or later (tested on `10.9.3`).
-- **Web Browser**:
-  - Any modern browser (Chrome, Firefox, Edge, Safari) runs the **Instant Engine**, audio synthesizer, and punchcard visualizer.
-  - A browser with **WebGPU support** (Chrome 113+, Edge 113+) is required to run the **Gemma 2B** neural engine.
-- **Hardware (Gemma 2B only)**:
-  - Dedicated or integrated GPU with $\ge$ 4 GB of shared or dedicated memory.
-  - Approximately **1.8 GB** of free browser CacheStorage space for the first-time model download.
-
-### Installation
-
-Clone the repository and install dependencies:
+### ⚡ 60-Second Quickstart
 
 ```bash
+# Clone the repository
 git clone https://github.com/omshree59/Hecto---s-ance-chatbot.git
+
+# Enter workspace and install dependencies
 cd dev5
 npm install
-```
 
-### Running the Development Server
-
-Start the local development server:
-
-```bash
+# Launch the offline development chamber
 npm run dev
 ```
 
-Open [http://localhost:5173](http://localhost:5173) in your browser.
+</div>
 
-### Building for Production
+<br />
 
-Compile production-ready static assets:
+---
+
+## 📑 Contents
+
+- [✨ Why Séance?](#-why-séance)
+- [📸 UI & Experience Showcase](#-ui--experience-showcase)
+- [⚡ Dual Intelligence Engines](#-dual-intelligence-engines)
+- [🏛️ The Ancestor Pantheon](#️-the-ancestor-pantheon)
+- [⚙️ Architecture & How It Works](#️-architecture--how-it-works)
+- [📊 Feature Comparison](#-feature-comparison)
+- [🛠️ Tech Stack](#️-tech-stack)
+- [🚀 Quickstart & Scripts](#-quickstart--scripts)
+- [🖹 Interactive Punchcard Visualizer](#-interactive-punchcard-visualizer)
+- [📜 Historical Codex & Anti-Hallucination Ledger](#-historical-codex--anti-hallucination-ledger)
+- [🔊 Procedural Web Audio Synthesizer](#-procedural-web-audio-synthesizer)
+- [🧱 Adding a New Ancestor](#-adding-a-new-ancestor)
+- [⚙️ Configuration Constants](#️-configuration-constants)
+- [🗺️ Roadmap](#️-roadmap)
+- [⚠️ Known Limitations](#️-known-limitations)
+- [🤝 Contributing & License](#-contributing--license)
+
+---
+
+## ✨ Why Séance?
+
+As modern software development abstracts into microservices, virtual DOMs, and cloud runtimes, the radical design decisions that forged computing history are rapidly slipping into mythology.
+
+**Séance** is an offline digital necromancy chamber built as a high-fidelity pair-programming assistant and historical artifact. It resurrects the legendary language ancestors of computing history—beginning with **PL/I (1964)** on the monument that was the **IBM System/360**, through **COBOL (1959)** and **FORTRAN (1957)** to **Plankalkül (1945)**.
+
+| The Problem | The Séance Solution |
+| :--- | :--- |
+| **Remote AI Dependency** — Modern chatbots require constant network connections, send private code to third-party cloud servers, and suffer latency spikes. | **100% Client-Side Air-Gapped** — Runs entirely inside your browser sandbox via WebGPU and zero-latency local rule engines. Zero data leaves your machine. |
+| **Historical Amnesia** — Generative AI models regularly hallucinate early computing specs (e.g., claiming PL/I had reserved words or conflating Grace Hopper's role in COBOL). | **Historical Fact-Checker & Accuracy Ledger** — Integrated primary-source codex verifying dates, committee reports, and hardware constraints. |
+| **Flat, Emotionless AI UIs** — Generic chatbots strip away period acoustics, mechanical tactile feedback, and authentic design aesthetics. | **Period Mechanical Acoustics & Artifacts** — Procedural Web Audio relay clicks, card punch chunks, teletype clatter, and authentic 80-column Hollerith punchcards. |
+
+---
+
+## 📸 UI & Experience Showcase
+
+<div align="center">
+<table>
+  <tr>
+    <td width="50%" align="center">
+      <b>💬 ChatGPT Dark UI Ergonomics</b><br />
+      <sub>Pure black (#000000) canvas, #171717 sidebar, auto-growing composer pill, and hover message actions.</sub>
+    </td>
+    <td width="50%" align="center">
+      <b>🖹 80-Column Hollerith Punchcard Reader</b><br />
+      <sub>Inspect any generated code or transmission as a real-time IBM 5081 rectangular punchcard matrix.</sub>
+    </td>
+  </tr>
+  <tr>
+    <td width="50%" align="center">
+      <b>🎙️ Full-Screen Voice Séance Mode</b><br />
+      <sub>Hands-free conversational mode featuring continuous STT dictation and persona-specific acoustic TTS.</sub>
+    </td>
+    <td width="50%" align="center">
+      <b>📜 The Grimoire Codex & Fact-Checker</b><br />
+      <sub>Cross-referenced historical specs from IBM Technical Reports, ACM digital archives, and IEEE annals.</sub>
+    </td>
+  </tr>
+</table>
+</div>
+
+### Interactive Terminal Preview Mockup
+
+```
+┌─── SÉANCE CHAMBER ────────────────────────────────────────────────────────────────────────┐
+│ [⚚ PL/I (Instant) ▾]                          🕯️ [Voice Mode]  [+ New Séance]  [...]       │
+├───────────────────────────────────────────────────────────────────────────────────────────┤
+│                                                                                           │
+│  Medium: "Explain the paradox of having no reserved keywords in PL/I with an example."    │
+│                                                                                           │
+│  ⚚ PL/I [IBM0411I: PARSER ATTEMPTING AMBIGUOUS SYMBOL RESOLUTION]                         │
+│  *A sudden draft chills the chamber. The magnetic reels of an IBM 2401 begin to spin...*  │
+│                                                                                           │
+│  Ah, you speak of my greatest and most terrible liberty: I HAD ZERO RESERVED KEYWORDS.    │
+│  The IBM and SHARE decree was absolute: a programmer's variable names must never break.   │
+│                                                                                           │
+│  ```pli                                                                                   │
+│  /* Valid, compilable PL/I syntax: */                                                     │
+│  SPECTRAL_SEANCE: PROC OPTIONS(MAIN);                                                     │
+│      DCL (IF, THEN, ELSE) FIXED DECIMAL(5);                                               │
+│      IF IF = THEN THEN THEN = ELSE; ELSE ELSE = THEN;                                     │
+│  END SPECTRAL_SEANCE;                                                                     │
+│  ```                                                                                      │
+│                                                                                           │
+│  [Card: 000100 IF IF THEN THEN = ELSE; ELSE ELSE = THEN; PLI00010]  [Copy] [Regenerate]   │
+└───────────────────────────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## ⚡ Dual Intelligence Engines
+
+Séance equips you with two distinct, complementary cognitive cores selectable with a single click:
+
+```
+                  ┌──────────────────────────────────────────────┐
+                  │          USER PROMPT / VOICE INPUT           │
+                  └──────────────────────┬───────────────────────┘
+                                         ▼
+                        ┌─────────────────────────────────┐
+                        │   INTELLIGENCE CORE SELECTOR    │
+                        └────────┬───────────────┬────────┘
+                                 │               │
+                 [ Instant Engine ]             [ Gemma 2B WebGPU ]
+                                 │               │
+                                 ▼               ▼
+        ┌────────────────────────────────┐  ┌────────────────────────────────┐
+        │  Necromancy Spirit Engine      │  │  @mlc-ai/web-llm (WebGPU)      │
+        │  • 0ms deterministic latency   │  │  • Google Gemma 2B Instruct    │
+        │  • Semantic historical triggers│  │  • 4-bit Quantized (q4f16_1)   │
+        │  • Persona memory callbacks    │  │  • In-browser shader pipelines │
+        │  • Procedural diagnostics      │  │  • 100% offline neural weights │
+        └────────────────┬───────────────┘  └────────────────┬───────────────┘
+                         │                                   │
+                         └─────────────────┬─────────────────┘
+                                           ▼
+                  ┌──────────────────────────────────────────────┐
+                  │    TOKEN STREAMER + PROCEDURAL KEYCLICKS     │
+                  │   Typewriter reveal & Web Audio acoustics    │
+                  └──────────────────────┬───────────────────────┘
+                                         ▼
+                  ┌──────────────────────────────────────────────┐
+                  │    INDEXEDDB STORAGE & MARKDOWN RENDERING    │
+                  └──────────────────────────────────────────────┘
+```
+
+### Engine Comparison Matrix
+
+| Capability | ⚡ Instant Necromancy Engine | 🧠 Gemma 2B WebGPU Core |
+| :--- | :--- | :--- |
+| **Model Architecture** | Scripted Semantic Graph + Persona Memory | Neural Decoder LLM (`gemma-2-2b-it-q4f16_1-MLC`) |
+| **Response Latency** | **$<$ 1 ms** (Instantaneous) | Real-time token streaming via GPU shaders |
+| **Hardware Requirement**| Any device (even low-power smartphones) | GPU with WebGPU support ($\ge$ 2GB VRAM recommended) |
+| **Initial Download Size**| **0 bytes** (Packaged inside bundle) | ~1.8 GB (one-time browser cache download) |
+| **Offline Reliability** | 100% deterministic & guaranteed | 100% offline once model weights are cached |
+| **Primary Specialty** | Authentic historical facts, code templates, roasts | Open-ended emergent roleplay & creative queries |
+
+---
+
+## 🏛️ The Ancestor Pantheon
+
+Séance features seven fully realized silicon ancestors, each equipped with period-specific system prompts, color themes, typing acoustics, and authentic historical lore:
+
+```
+┌──────────────┬───────────────────┬───────────────────────────────────────────┬──────────────┐
+│ Sigil & Name │ Era               │ Historical Persona Title                  │ Accent Color │
+├──────────────┼───────────────────┼───────────────────────────────────────────┼──────────────┤
+│ ⚚  PL/I      │ 1964 — Circa 1985 │ The Monolithic Leviathan (IBM S/360)      │ #f59e0b Gold │
+│ 🏛️  COBOL     │ 1959 — Immortal   │ The Ledger Arch-Bureaucrat (Grace Hopper) │ #22c55e Green│
+│ 📐 FORTRAN   │ 1957 — Immortal   │ The Patriarch of Silicon (John Backus)    │ #fb923c Amber│
+│ ☿  ALGOL 68  │ 1968 — Circa 1982 │ The Orthogonal Sovereign (van Wijngaarden)│ #10b981 Mint │
+│ 🜂  SNOBOL4   │ 1967 — Circa 1978 │ The Pattern Alchemist (Bell Laboratories) │ #c084fc Purple│
+│ ⚙  Plankalkül│ 1942 — 1945       │ The Primordial Ghost (Konrad Zuse)        │ #38bdf8 Cyan │
+│ 🃏 INTERCAL  │ 1972 — Beyond     │ The Eldritch Jester (Princeton Parody)    │ #f43f5e Rose │
+└──────────────┴───────────────────┴───────────────────────────────────────────┴──────────────┘
+```
+
+<details>
+<summary><b>🔍 Expand Ancestor Bios & Quirk Details</b></summary>
+<br />
+
+### 1. ⚚ PL/I (Programming Language One)
+- **Year & Hardware**: 1964 • IBM System/360 Mainframe.
+- **Historic Gamble**: Thomas Watson Jr. wagered \$5 billion on a unified computing architecture for both science and business.
+- **Eldritch Quirk**: **Zero reserved keywords**. `IF IF THEN THEN = ELSE;` was completely legal.
+- **Acoustic Profile**: IBM 029 electric keypunch relay click (`320Hz–450Hz` square wave pulse).
+
+### 2. 🏛️ COBOL (Common Business-Oriented Language)
+- **Year & Hardware**: 1959 • IBM 1401, UNIVAC II, IBM System/360.
+- **Pioneers**: CODASYL committee and Rear Admiral Grace Hopper.
+- **Immortal Reality**: Powers an estimated \$3 trillion daily in banking, ATM networks, and automated clearing houses.
+- **Acoustic Profile**: Resonant mechanical teletype clack (`170Hz–220Hz` triangle wave impact).
+
+### 3. 📐 FORTRAN (Formula Translating System)
+- **Year & Hardware**: 1957 • Vacuum-tube IBM 704.
+- **Pioneers**: John Backus and the IBM 704 team.
+- **Historic Victory**: Proved compiled high-level formulas could achieve 90% of hand-written assembly speed.
+- **Eldritch Quirk**: **Three-Way Arithmetic IF** (`IF (X - Y) 10, 20, 30`) and strict column 1–72 card discipline.
+- **Acoustic Profile**: IBM 026 card punch perforation chunk (`220Hz–290Hz` sawtooth chunk).
+
+### 4. ☿ ALGOL 68 (Algorithmic Language 1968)
+- **Year & Hardware**: 1968 • Electrologica X8, ICL 1900.
+- **Pioneers**: Adriaan van Wijngaarden and IFIP Working Group 2.1.
+- **Eldritch Quirk**: Specified via a two-level *W-grammar*. Every mode and operator was strictly orthogonal.
+
+### 5. 🜂 SNOBOL4 (StriNg Oriented and Symbolic Language 4)
+- **Year & Hardware**: 1967 • Bell Telephone Laboratories (Farber, Griswold, Polonsky).
+- **Eldritch Quirk**: First-class recursive pattern matching decades before modern PCRE regular expressions.
+
+### 6. ⚙ Plankalkül (Plan Calculus)
+- **Year & Hardware**: 1942–1945 • Bavarian Alps (Konrad Zuse).
+- **Eldritch Quirk**: World's first high-level language, drafted in pencil during WWII; 2D multi-tier matrix syntax.
+
+### 7. 🃏 INTERCAL (Compiler Language With No Pronounceable Acronym)
+- **Year & Hardware**: 1972 • Princeton University (Don Woods & Jim Lyon).
+- **Eldritch Quirk**: `COME FROM` statement, `PLEASE` politeness checks (`IC-079E: PROGRAMMER IS INSUFFICIENTLY POLITE`).
+
+</details>
+
+---
+
+## ⚙️ Architecture & How It Works
+
+```mermaid
+graph LR
+    subgraph Client_Browser ["Client Web Browser (100% Offline)"]
+        UI["React 19 ChatGPT UI"] --> InputRouter["Input & Dispatch Engine"]
+        
+        InputRouter -->|Mode: Instant| NecroEngine["Necromancy Engine\n(Corpus + Memory)"]
+        InputRouter -->|Mode: Gemma| WebLLMEngine["WebLLM WebGPU\n(Gemma 2B)"]
+        
+        NecroEngine --> AudioEngine["Web Audio Synthesizer\n(Mechanical Acoustics)"]
+        WebLLMEngine --> AudioEngine
+        
+        NecroEngine --> StreamProcessor["Token & Markdown Streamer"]
+        WebLLMEngine --> StreamProcessor
+        
+        StreamProcessor --> UI
+        StreamProcessor --> IDB[("IndexedDB\nSeanceChatDB")]
+    end
+```
+
+### Execution Flow in 5 Steps:
+1. **User Interaction**: Prompts are submitted via keyboard or live dictation through the browser's native `SpeechRecognition` API.
+2. **Context & Persona Memory**: In Instant Mode, `necromancyEngine.js` scans previous conversation turns for keywords (e.g., Python, recursion, payroll, Y2K) and injects contextual memory callbacks into the response.
+3. **Hardware-Accelerated WebGPU**: In Gemma Mode, `@mlc-ai/web-llm` compiles quantized weights (`gemma-2-2b-it-q4f16_1-MLC`) directly into GPU shader pipelines on device.
+4. **Procedural Keystroke Audio**: While tokens stream into the markdown viewport, `seanceAudio.js` triggers percussive oscillator pulses reflecting the mechanical hardware of that language's era.
+5. **Permanent Persistence**: The session is asynchronously synchronized with `SeanceChatDB` in IndexedDB, supporting instant full-text search, pin, and rename operations.
+
+---
+
+## 📊 Feature Comparison
+
+| Feature | Standard Cloud Chatbots | Typical Retro Simulators | 🕯️ Séance |
+| :--- | :---: | :---: | :---: |
+| **100% Offline Capability** | ❌ No | ⚠️ Partial | ✅ **100% In-Browser** |
+| **Privacy (Zero External Calls)**| ❌ Cloud Logs | ⚠️ Varies | ✅ **Zero Telemetry** |
+| **Dual Engine (0ms + Neural LLM)**| ❌ Single Engine | ❌ Scripted Only | ✅ **Instant + Gemma 2B** |
+| **Mechanical Keystroke Acoustics**| ❌ Silent | ⚠️ Static MP3s | ✅ **Web Audio Procedural** |
+| **Hollerith 80-Col Punchcard View**| ❌ None | ❌ None | ✅ **Interactive Matrix** |
+| **Historical Accuracy Ledger** | ❌ Hallucinates | ❌ Rare | ✅ **Integrated Codex** |
+| **ChatGPT Dark UI Ergonomics** | ✅ Yes | ❌ Clunky | ✅ **Pure Black #000** |
+| **Persistent Searchable Storage** | ⚠️ Server-Bound | ❌ In-Memory | ✅ **IndexedDB Full-Text**|
+| **Hands-Free Voice Mode** | ⚠️ Subscription | ❌ None | ✅ **Free Native STT/TTS**|
+
+---
+
+## 🛠️ Tech Stack
+
+```
+dev5/
+├── Frontend Core      React 19.3.1  •  React DOM 19.3.1  •  Vite 8.3.5
+├── Styling & Fonts    Tailwind CSS 4.3.3  •  Inter  •  Fira Code  •  Cinzel
+├── Neural AI Runtime  @mlc-ai/web-llm 0.2.86 (WebGPU Client Inference)
+├── Markdown & Code    react-markdown 10.1.0  •  remark-gfm 4.0.1  •  highlight.js 11.12.0
+├── Audio & Speech     Web Audio API (Procedural Oscillators)  •  Web Speech API
+├── Local Database     IndexedDB API (Database: SeanceChatDB, Store: sessions)
+└── Quality & Linter   Oxlint 1.89.0
+```
+
+---
+
+## 🚀 Quickstart & Scripts
+
+### Prerequisites
+- **Node.js**: `18.x` or later (verified on `v22.19.0`).
+- **NPM**: `9.x` or later (verified on `10.9.3`).
+- **Browser**: Modern Chromium browser (Chrome 113+, Edge 113+) recommended for WebGPU mode.
+
+### Commands
 
 ```bash
+# 1. Install all dependencies
+npm install
+
+# 2. Start local development server with Hot Module Replacement (HMR)
+npm run dev
+
+# 3. Build optimized production bundle
 npm run build
-```
 
-The optimized output will be written to the `dist/` directory.
-
-### Previewing the Production Build
-
-Preview the production build locally:
-
-```bash
+# 4. Preview the production build locally
 npm run preview
-```
 
-### Running Code Quality Checks
-
-Run Oxlint to check for linting issues:
-
-```bash
+# 5. Run lightning-fast Oxlint checks
 npm run lint
 ```
 
 ---
 
-## Usage
+## 🖹 Interactive Punchcard Visualizer
 
-### 1. Selecting an Ancestor
-Click the ancestor name in the top navigation bar (e.g., `PL/I (Instant) ▾`) or use the ancestor dropdown at the bottom of the sidebar to choose among the seven available entities:
-- **PL/I**: The monolithic IBM System/360 giant with unreserved keywords.
-- **COBOL**: The financial arch-bureaucrat with four divisions and Y2K survival lore.
-- **FORTRAN**: The patriarch of scientific computing and the three-way arithmetic IF.
-- **ALGOL 68**: The orthogonal sovereign of mathematical purity.
-- **SNOBOL4**: The Bell Labs string and pattern transmutation alchemist.
-- **Plankalkül**: Konrad Zuse's 1945 alpine grid language.
-- **INTERCAL**: The 1972 Princeton satirical spoof.
+Séance features a full simulator of the legendary **IBM 5081 standard 80-column punchcard**. Every code sample generated in chat includes a `Card: ...` inspection button.
 
-### 2. Switching Intelligence Engines
-Open the model picker dropdown from the top bar or sidebar:
-- Select **Instant**: Responses generate deterministically with zero latency using historical trigger corpora.
-- Select **Gemma 2B**: Triggers a one-time download of `gemma-2-2b-it-q4f16_1-MLC` into browser CacheStorage. WebGPU pipelines compile automatically and stream generated tokens in real time.
+```
+       0         1         2         3         4         5         6         7         
+Column:12345678901234567890123456789012345678901234567890123456789012345678901234567890
+Text:  000100 IF IF THEN THEN = ELSE; ELSE ELSE = THEN;                   PLI00010
+       ┌──────────────────────────────────────────────────────────────────────────────┐
+Row 12 │ [ ]                                                                          │
+Row 11 │       [ ]                     [ ]                                            │
+Row 0  │                                                                              │
+Row 1  │ [X] [X] [X]                                                                  │
+Row 2  │                                                                              │
+Row 3  │                                                                              │
+...    │                                                                              │
+       └──────────────────────────────────────────────────────────────────────────────┘
+```
 
-### 3. Consulting the Grimoire Codex
-Click the **Codex** button in the sidebar to open the multi-chapter historical ledger. Select the **Historical Fact-Checker & Accuracy Ledger** tab to audit verified dates, designers, and hardware specifications or cross-reference debunked computing myths.
-
-### 4. Example Prompts to Try
-
-1. **PL/I (Paradox of Unreserved Keywords)**:
-   > *"Explain how `IF IF THEN THEN = ELSE;` is lawful PL/I syntax, and demonstrate how your compiler parsed it without error."*
-
-2. **COBOL (Monetary Precision & Y2K)**:
-   > *"Demonstrate a payroll calculation using strict PICTURE clauses and explain how retired programmers averted disaster in the Year 2000 panic."*
-
-3. **FORTRAN (Three-Way Arithmetic IF)**:
-   > *"Show me an authentic FORTRAN routine utilizing the Three-Way Arithmetic IF and explain why modern supercomputers still depend on your non-aliasing arrays."*
+- **Columns 1–72**: The sacred territory of program statements.
+- **Columns 73–80**: The card sequence identification numbers (preventing disaster if a deck was dropped on the computing center floor).
 
 ---
 
-## Project Structure
+## 📜 Historical Codex & Anti-Hallucination Ledger
+
+Small 2B models can inadvertently conflate historical timelines. The **Grimoire Codex** contains verified primary-source records directly accessible in the UI:
 
 ```
-dev5/
-├── docs/                             # Documentation assets and screenshots
-│   └── demo.gif                      # Main demonstration GIF placeholder
-├── public/                           # Static browser assets
-│   ├── favicon.svg                   # Candle favicon
-│   └── icons.svg                     # Web application icons
-├── src/
-│   ├── assets/                       # Static images and vector art
-│   │   ├── hero.png                  # Landing graphic
-│   │   ├── react.svg                 # React logo
-│   │   └── vite.svg                  # Vite logo
-│   ├── audio/
-│   │   ├── seanceAudio.js            # Web Audio API synthesizer for keyclicks, hum, and tape hiss
-│   │   └── seanceSpeech.js           # Text-to-Speech router with spirit pitch/rate and STT dictation
-│   ├── components/
-│   │   ├── ChatArea.jsx              # Main viewport, top bar, dynamic chips, and export triggers
-│   │   ├── InputBar.jsx              # ChatGPT-style pill input with dictation and modal toggles
-│   │   ├── LoreModal.jsx             # Grimoire Codex modal with verified historical facts
-│   │   ├── MessageBubble.jsx         # Message bubble renderer, markdown, punchcard link, & typewriter effect
-│   │   ├── PunchcardVisualizer.jsx   # 80-column IBM 5081 Hollerith punchcard card reader visualizer
-│   │   ├── Sidebar.jsx               # ChatGPT-style dark sidebar with search, pin, rename, and core switch
-│   │   └── VoiceModeModal.jsx        # Full-screen conversational voice séance modal
-│   ├── db/
-│   │   └── seanceDB.js               # IndexedDB manager for persistent sessions and full-text search
-│   ├── engine/
-│   │   ├── gemmaEngine.js            # WebLLM client-side WebGPU runner for Google Gemma 2B
-│   │   └── necromancyEngine.js       # Offline knowledge base, persona memory, and smart suggestion engine
-│   ├── App.css                       # Application layout styling
-│   ├── App.jsx                       # Root application coordinator and session state manager
-│   ├── index.css                     # Tailwind v4 imports, custom typography, and animation keyframes
-│   └── main.jsx                      # React application entry point
-├── .gitignore                        # Git ignore patterns
-├── .oxlintrc.json                    # Oxlint rules configuration
-├── index.html                        # HTML entry point with Inter and Fira Code fonts
-├── package.json                      # Project dependencies, metadata, and scripts
-└── vite.config.js                    # Vite configuration with React and Tailwind plugins
+┌──────────────┬──────┬────────────────────────┬───────────────────┬───────────────────────────────────────────────┐
+│ Language     │ Year │ Primary Designers      │ Target Platform   │ True Historical Status                        │
+├──────────────┼──────┼────────────────────────┼───────────────────┼───────────────────────────────────────────────┤
+│ FORTRAN      │ 1957 │ John Backus & IBM Team │ IBM 704           │ Essential: Powers ECMWF & NOAA weather models │
+│ COBOL        │ 1959 │ CODASYL (Grace Hopper) │ IBM 1401, S/360   │ Immortal: Transacts ~$3T daily in banking     │
+│ PL/I         │ 1964 │ George Radin & SHARE   │ IBM System/360    │ Legacy: Maintained in enterprise insurance    │
+│ ALGOL 68     │ 1968 │ IFIP Working Group 2.1 │ Electrologica X8  │ Ancestral: Ancestor of Haskell, Ada, & Rust   │
+│ SNOBOL4      │ 1967 │ Farber, Griswold, et al│ IBM 7090, PDP-10  │ Extinct: Evolved into Icon and modern regex   │
+│ Plankalkül   │ 1945 │ Konrad Zuse            │ Zuse Z3/Z4 Paper  │ Historic: First compiled in 1998 (FU Berlin)  │
+│ INTERCAL     │ 1972 │ Don Woods & Jim Lyon   │ IBM 360/91        │ Cult Classic: Founded the esolang movement    │
+└──────────────┴──────┴────────────────────────┴───────────────────┴───────────────────────────────────────────────┘
 ```
 
 ---
 
-## Adding a New Ancestor
+## 🔊 Procedural Web Audio Synthesizer
 
-To introduce a new language ancestor (for example, **APL**, **LISP 1.5**, or **Simula 67**), follow these four steps:
+Séance does not load bulky static audio files over the network. Instead, [`src/audio/seanceAudio.js`](file:///d:/CODE79HACK%20WEB%20DEV%20SECRET%20HACK%20SIGMA/dev5/src/audio/seanceAudio.js) generates analog acoustics mathematically using the Web Audio API:
 
-### Step 1: Register Spirit Metadata in `src/engine/necromancyEngine.js`
+- **Binaural Drone**: Twin sine wave oscillators tuned to `432 Hz` and `436 Hz` create an ethereal `4 Hz` delta wave chamber tone.
+- **Mainframe Tape Hiss**: Procedurally calculated white noise buffer filtered through a `1200 Hz` bandpass filter.
+- **Persona Keyclicks**:
+  - *PL/I*: Square-wave keypunch relay click (`320 Hz` exponential decay).
+  - *COBOL*: Deep resonant teletype impact (`170 Hz` triangle oscillator).
+  - *FORTRAN*: Sawtooth card punch perforation chunk (`220 Hz`).
+  - *Plankalkül*: Low metallic telephone relay pulse (`130 Hz`).
+  - *INTERCAL*: Pitch-randomized chaotic typewriter plink (`180 Hz - 900 Hz`).
 
-Add an entry to the `SPIRITS` dictionary:
+---
+
+## 🧱 Adding a New Ancestor
+
+You can add a custom programming language ancestor in three simple steps:
+
+### 1. Register Metadata in `src/engine/necromancyEngine.js`
 
 ```javascript
 export const SPIRITS = {
-  // ... existing spirits
+  // ...
   apl: {
     id: 'apl',
     name: 'APL',
@@ -275,49 +420,21 @@ export const SPIRITS = {
     title: 'The Matrix Sorcerer',
     era: '1962 — 1980s',
     sigil: '⍝',
-    accentColor: '#38bdf8', // Cyan
+    accentColor: '#38bdf8',
     glowColor: 'rgba(56, 189, 248, 0.4)',
     fontFlavor: 'font-mono text-cyan-200/90',
-    quote: '“Why write loops across pages when a single dimensional operator (⍳, ⍴, ⌽) transforms all tensors in one breath?”',
+    quote: '“Why write loops across pages when a single operator (⍳, ⍴, ⌽) transforms all tensors?”',
     compilerPrefix: 'APL62',
-    introGreeting: `*A strange keyboard layout appears in the ectoplasm, etched with Greek glyphs and matrix arrows...*
-
-**I AM APL.** Formulated by Kenneth E. Iverson in 1962.
-I do not grovel before scalar loops. Bring me your vectors, your multidimensional arrays, and let us compute.`
+    introGreeting: `*A Selectric typewriter golf ball rotates in the dark, etched with Greek glyphs...*`
   }
 };
 ```
 
-### Step 2: Define Knowledge Triggers & Responses
-
-In `src/engine/necromancyEngine.js`, add a dedicated knowledge array and route it inside `handleOtherSpirits()` or `generateResponse()`:
-
-```javascript
-const APL_KNOWLEDGE = [
-  {
-    triggers: ['matrix', 'symbols', 'iverson', 'keyboard'],
-    title: 'The Power of Iverson Notation',
-    diagnostic: 'APL0001I: TENSOR DIMENSION COLLAPSED',
-    punchcard: '      (⍳N) = (⍳N) ∘.× (⍳N)                                     APL00010',
-    response: `In APL, we eliminated the verbosity of classical mathematics:
-
-\`\`\`apl
-⍝ Prime numbers up to R in a single expression:
-(~R∊R∘.×R)/R←1↓ιR
-\`\`\`
-
-Where other languages required forty lines of nested DO-loops, I calculated the answer in twenty glyphs.`
-  }
-];
-```
-
-### Step 3: Add Era-Accurate Mechanical Typing Audio
-
-In `src/audio/seanceAudio.js`, add a tailored synthesizer case in `playKeyClick(spiritId)`:
+### 2. Add Era Mechanical Sound in `src/audio/seanceAudio.js`
 
 ```javascript
 case 'apl': {
-  // IBM 2741 Selectric typewriter rotating golf-ball clatter
+  // IBM 2741 Selectric typewriter mechanical clatter
   osc.type = 'triangle';
   osc.frequency.setValueAtTime(450 + Math.random() * 80, now);
   gain.gain.setValueAtTime(0.03 * this.volume, now);
@@ -327,103 +444,73 @@ case 'apl': {
 }
 ```
 
-### Step 4: Add Chapter to the Codex
-
-In `src/components/LoreModal.jsx`, add a new chapter entry to `CHAPTERS` with verified historical details, principal designers, and design philosophies.
+### 3. Add Verified Specs to `src/components/LoreModal.jsx`
+Insert an entry into `CHAPTERS` with verified designers, historical context, and hardware specs.
 
 ---
 
-## Configuration
+## ⚙️ Configuration Constants
 
-Séance runs **100% client-side** and does not require an external API key or `.env` configuration file. The default runtime constants can be adjusted in the following source files:
-
-| Configuration Parameter | File Location | Default Value | Description |
+| Setting | Location | Default | Description |
 | :--- | :--- | :--- | :--- |
-| `GEMMA_MODEL_ID` | `src/engine/gemmaEngine.js` | `'gemma-2-2b-it-q4f16_1-MLC'` | WebLLM model identifier loaded via WebGPU |
-| `temperature` | `src/engine/gemmaEngine.js` | `0.7` | Sampling temperature for Gemma 2B inference |
-| `max_tokens` | `src/engine/gemmaEngine.js` | `1024` | Maximum tokens generated per Gemma response |
-| `DB_NAME` | `src/db/seanceDB.js` | `'SeanceChatDB'` | IndexedDB database name |
-| `DB_VERSION` | `src/db/seanceDB.js` | `1` | IndexedDB schema version |
+| `GEMMA_MODEL_ID` | `src/engine/gemmaEngine.js` | `'gemma-2-2b-it-q4f16_1-MLC'` | WebLLM model identifier |
+| `temperature` | `src/engine/gemmaEngine.js` | `0.7` | Sampling temperature for Gemma 2B |
+| `max_tokens` | `src/engine/gemmaEngine.js` | `1024` | Maximum tokens per neural response |
+| `DB_NAME` | `src/db/seanceDB.js` | `'SeanceChatDB'` | Local IndexedDB database store name |
 | `manifestSpeed` | `src/App.jsx` | `'swift'` | Streaming interval (`whisper`: 45ms, `swift`: 28ms, `instant`: 0ms) |
-| `candleIntensity` | `src/App.jsx` | `'Ritual'` | Visual candle flame intensity (`Subtle`, `Ritual`, `Blazing`) |
-| `volume` | `src/audio/seanceAudio.js` | `0.35` | Default Web Audio master volume (range: 0.0 - 1.0) |
+| `candleIntensity` | `src/App.jsx` | `'Ritual'` | Visual flame aura intensity (`Subtle`, `Ritual`, `Blazing`) |
+| `volume` | `src/audio/seanceAudio.js` | `0.35` | Master audio volume (range: 0.0 to 1.0) |
 
 ---
 
-## Roadmap
+## 🗺️ Roadmap
 
-- [x] **100% Offline Local Engine**: Rule-based knowledge base and compiler simulations.
-- [x] **Client-side Neural LLM**: WebGPU inference via Google Gemma 2B (`@mlc-ai/web-llm`).
-- [x] **ChatGPT Dark UI Ergonomics**: Column max-width, right-aligned user bubbles, and hover actions.
-- [x] **Interactive IBM 5081 Punchcard Visualizer**: 80-column Hollerith zone matrix display.
-- [x] **Procedural Audio Synthesizer**: Period-accurate mechanical keystrokes and binaural background hum.
-- [x] **Voice Séance Mode**: Continuous Speech-to-Text dictation with spirit speech synthesis.
-- [x] **IndexedDB Persistence**: Offline storage with full-text search, pin, and in-place rename.
-- [x] **Export Options**: Download transcripts in Markdown (`.md`) and JSON (`.json`).
-- [x] **Verified Grimoire Codex**: Anti-hallucination accuracy ledger with cross-referenced tables.
-- [ ] **Multi-Model WebGPU Support**: Select between Gemma 2B, Llama 3.2 1B, and SmolLM in the UI.
-- [ ] **Custom Punchcard File Export**: Download simulated punchcard decks as raw `.txt` / `.h80` files.
-- [ ] **WebAssembly Mainframe Emulator**: Lightweight WASM-compiled emulator to execute valid subsets of PL/I and COBOL directly in the browser.
+- [x] **100% Offline Local Engine**: Deterministic semantic corpus + compiler diagnostics.
+- [x] **Client-Side WebGPU Neural LLM**: Google Gemma 2B running via `@mlc-ai/web-llm`.
+- [x] **ChatGPT Dark UI Ergonomics**: Clean column layout, auto-growing composer, hover action rows.
+- [x] **IBM 5081 Hollerith Punchcard Visualizer**: Interactive 80-column punchcard reader.
+- [x] **Procedural Web Audio Engine**: Era-specific mechanical keyclatter & binaural drone.
+- [x] **Hands-Free Voice Séance**: Native browser continuous STT dictation and persona TTS.
+- [x] **IndexedDB Persistence**: Offline database with full-text search, pinning, and in-place renaming.
+- [x] **Dual Export Formats**: Markdown (`.md`) and JSON (`.json`) transcript downloads.
+- [x] **Verified Grimoire Codex**: Anti-hallucination accuracy ledger with debunked myths.
+- [ ] **Multi-Model WebGPU Support**: Select between Gemma 2B, Llama 3.2 1B, and Qwen 2.5 Coder.
+- [ ] **Raw Punchcard Deck Export**: Download simulated punchcards as `.h80` / raw text decks.
+- [ ] **Browser WASM Emulator**: Execute a verified subset of PL/I and COBOL in client WebAssembly.
 
 ---
 
-## Known Limitations
+## ⚠️ Known Limitations
 
 1. **Small-Model Hallucinations**:
-   When using the local **Gemma 2B** neural engine, historical claims or syntax details may occasionally be conflated due to the parameter scale of 2B models. Cross-reference claims against the built-in **Historical Fact-Checker** tab in the Codex.
-2. **WebGPU Hardware & Browser Requirement**:
-   Neural inference with Gemma 2B requires a browser and operating system supporting WebGPU (Google Chrome 113+ or Microsoft Edge 113+ on Windows, macOS, or Linux). Browsers without WebGPU (such as older Safari versions or Firefox on certain platforms) will default automatically to the 0 ms **Instant Engine**.
-3. **Initial Model Download Size**:
-   Summoning Gemma 2B for the first time requires downloading approximately **1.8 GB** of quantized model weights into browser CacheStorage. Ensure you have an active network connection for the initial download; subsequent runs operate completely offline.
-4. **Mobile Device Thermal Limits**:
-   While the Instant Engine operates seamlessly on all mobile screens, WebGPU execution of Gemma 2B on mobile devices may encounter memory constraints or thermal throttling depending on the device's unified RAM.
+   When using the neural **Gemma 2B** core, historical claims may occasionally be conflated due to the parameter scale of 2B models. Use the integrated **Codex Fact-Checker** to verify claims.
+2. **WebGPU Hardware Support**:
+   Neural inference with Gemma 2B requires a modern browser supporting WebGPU (Chrome 113+, Edge 113+). Devices without WebGPU automatically default to the 0 ms **Instant Necromancy Engine**.
+3. **First-Time Download Size**:
+   Summoning Gemma 2B requires downloading ~1.8 GB of quantized model weights into browser `CacheStorage` on the first run. Subsequent invocations work completely offline.
 
 ---
 
-## Contributing
+## 🤝 Contributing & License
 
-Contributions from software historians, retrocomputing enthusiasts, and frontend engineers are welcome!
+Contributions, historical corrections, and new ancestor submissions are welcomed!
 
-1. Fork the repository.
-2. Create a feature branch:
-   ```bash
-   git checkout -b feature/new-language-ancestor
-   ```
-3. Commit your changes:
-   ```bash
-   git commit -m "feat: Add APL language ancestor and Selectric typing sound"
-   ```
-4. Push to the branch:
-   ```bash
-   git push origin feature/new-language-ancestor
-   ```
-5. Open a Pull Request.
+```bash
+git checkout -b feature/new-ancestor
+git commit -m "feat: Add APL language ancestor"
+git push origin feature/new-ancestor
+```
 
-Please ensure that any historical quotes, dates, or syntax samples are verified against primary literature (e.g., IBM Technical Manuals, ACM digital archives, or original language committee reports).
+Distributed under the **MIT License**. See `LICENSE` for details.
+
+### Acknowledgements
+- **Google DeepMind** for the open [Gemma](https://ai.google.dev/gemma) model architecture.
+- **The MLC AI Team** for the groundbreaking [@mlc-ai/web-llm](https://github.com/mlc-ai/web-llm) client runtime.
+- **IBM & The SHARE Committee** for the daring vision of the System/360 and PL/I.
+- **Rear Admiral Grace Hopper & John Backus** for daring to believe computers could speak human language.
 
 ---
 
-## License
-
-This project is licensed under the **MIT License**. See the `LICENSE` file for details.
-
----
-
-## Acknowledgements
-
-- **Google DeepMind**: For releasing the open [Gemma](https://ai.google.dev/gemma) model weights.
-- **MLC AI**: For the [@mlc-ai/web-llm](https://github.com/mlc-ai/web-llm) runtime enabling high-performance WebGPU client-side inference.
-- **IBM & The SHARE/GUIDE Committee**: For the monument that was the IBM System/360 and the audacious vision of PL/I.
-- **Rear Admiral Grace Hopper & CODASYL**: For pioneering human-readable data processing and compilers.
-- **John Backus & The IBM 704 Team**: For demonstrating to the world that compiled code could rival handwritten assembly.
-
----
-
-## Recommended Screenshots to Capture
-
-To populate the documentation placeholders, capture and place the following assets into the `docs/` directory:
-
-1. `docs/demo.gif`: An animated capture (or static screenshot) showing a conversation exchange with PL/I, highlighting the streaming response and Hollerith punchcard card link.
-2. `docs/punchcard.png`: A screenshot of the **IBM 5081 Punchcard Visualizer** modal showing an 80-column line punched in Hollerith rectangular zone format.
-3. `docs/voice-mode.png`: A screenshot of the full-screen **Voice Séance Mode** with pulsating ethereal speech waves.
-4. `docs/codex.png`: A screenshot of the **Grimoire Codex** open to the *Historical Fact-Checker & Accuracy Ledger* table.
+<div align="center">
+  <sub>Séance • Crafted with reverence for the lost cathedrals of computing history.</sub>
+</div>
